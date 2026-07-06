@@ -32,7 +32,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var modeGroup: RadioGroup
     private lateinit var pathLayout: LinearLayout
     private lateinit var inputPath: EditText
-    private lateinit var generateTreeBtn: Button
 
     private val REQUEST_MANAGE_STORAGE = 1001
     private val REQUEST_WRITE_STORAGE = 1002
@@ -46,21 +45,28 @@ class MainActivity : AppCompatActivity() {
         modeGroup = findViewById(R.id.modeGroup)
         pathLayout = findViewById(R.id.pathLayout)
         inputPath = findViewById(R.id.inputPath)
-        generateTreeBtn = findViewById(R.id.generateTreeBtn)
 
-        // 模式切换
+        // 初始状态：文本模式
+        setupTextMode()
+
+        // 模式切换监听
         modeGroup.setOnCheckedChangeListener { _, checkedId ->
             when (checkedId) {
                 R.id.modeText -> {
                     pathLayout.visibility = android.view.View.GONE
+                    setupTextMode()
                 }
                 R.id.modePath -> {
                     pathLayout.visibility = android.view.View.VISIBLE
+                    setupPathMode()
                 }
             }
         }
+    }
 
-        // 文本模式：生成 ZIP
+    // 设置为文本模式：按钮文字和功能
+    private fun setupTextMode() {
+        generateBtn.text = "生成 ZIP 并保存到内部存储"
         generateBtn.setOnClickListener {
             if (checkPermission()) {
                 generateFromText()
@@ -68,9 +74,12 @@ class MainActivity : AppCompatActivity() {
                 requestPermission()
             }
         }
+    }
 
-        // 文件夹模式：生成树形文本并复制
-        generateTreeBtn.setOnClickListener {
+    // 设置为文件夹模式：按钮文字和功能
+    private fun setupPathMode() {
+        generateBtn.text = "复制"
+        generateBtn.setOnClickListener {
             if (checkPermission()) {
                 generateTreeAndCopy()
             } else {
@@ -172,14 +181,14 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // ---------- 文件夹模式：生成文件树并复制到剪贴板 ----------
+    // ---------- 文件夹模式：生成文件树并复制 ----------
     private fun generateTreeAndCopy() {
         val path = inputPath.text.toString().trim()
         if (path.isEmpty()) {
             Toast.makeText(this, "请输入文件夹路径", Toast.LENGTH_SHORT).show()
             return
         }
-        generateTreeBtn.isEnabled = false
+        generateBtn.isEnabled = false
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val sourceDir = File(path)
@@ -190,31 +199,28 @@ class MainActivity : AppCompatActivity() {
                     return@launch
                 }
 
-                // 生成树形文本
                 val tree = buildFileTree(sourceDir)
 
                 withContext(Dispatchers.Main) {
-                    // 填入输入框便于查看或打包
+                    // 填入输入框便于查看
                     inputTree.setText(tree)
                     // 复制到剪贴板
                     val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                     val clip = ClipData.newPlainText("文件树", tree)
                     clipboard.setPrimaryClip(clip)
-                    Toast.makeText(this@MainActivity, "已复制文件树到剪贴板，并填入编辑区", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@MainActivity, "已复制文件树到剪贴板", Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
                     Toast.makeText(this@MainActivity, "错误: ${e.message}", Toast.LENGTH_LONG).show()
                 }
             } finally {
-                withContext(Dispatchers.Main) { generateTreeBtn.isEnabled = true }
+                withContext(Dispatchers.Main) { generateBtn.isEnabled = true }
             }
         }
     }
 
-    /**
-     * 递归生成树形结构字符串，类似 tree 命令输出
-     */
+    /** 递归生成文件树字符串 */
     private fun buildFileTree(dir: File, prefix: String = ""): String {
         val sb = StringBuilder()
         val children = dir.listFiles()?.sortedBy { it.name } ?: return ""
@@ -238,7 +244,7 @@ class MainActivity : AppCompatActivity() {
         return sb.toString()
     }
 
-    // ---------- 解析文本树生成目录和文件 ----------
+    /** 解析文本树，生成目录和空文件 */
     private fun parseAndCreate(text: String, rootDir: File) {
         val lines = text.lines().filter { it.isNotBlank() }
         val stack = mutableListOf(rootDir)
@@ -287,6 +293,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    /** 压缩目录为 ZIP */
     private fun zipDirectory(sourceDir: File, zipFile: File) {
         ZipOutputStream(FileOutputStream(zipFile)).use { zos ->
             sourceDir.walkTopDown().forEach { file ->
