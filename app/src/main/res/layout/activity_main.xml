@@ -5,7 +5,7 @@
     android:orientation="vertical"
     android:padding="16dp">
 
-    <!-- 顶部间距，让模式选择舒适 -->
+    <!-- 顶部间距 -->
     <View
         android:layout_width="match_parent"
         android:layout_height="24dp" />
@@ -41,78 +41,123 @@
             android:text="文件夹模式" />
     </RadioGroup>
 
-    <!-- 文件夹模式输入区域（默认隐藏） -->
+    <!-- ========= 文本模式内容区域 ========= -->
     <LinearLayout
-        android:id="@+id/pathLayout"
+        android:id="@+id/textModeLayout"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="0dp"
+        android:layout_weight="1"
         android:orientation="vertical"
-        android:visibility="gone"
-        android:layout_marginTop="12dp">
+        android:visibility="visible">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="输入文件树（目录以“/”结尾）"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:layout_marginTop="12dp"
+            android:layout_marginBottom="8dp" />
+
+        <EditText
+            android:id="@+id/inputTree"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:gravity="top|start"
+            android:inputType="textMultiLine|textNoSuggestions"
+            android:hint="在此粘贴树形结构..."
+            android:textSize="14sp"
+            android:fontFamily="monospace"
+            android:background="@android:drawable/edit_text" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="8dp"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="保存至："
+                android:textSize="14sp" />
+
+            <EditText
+                android:id="@+id/savePath"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:inputType="textUri"
+                android:singleLine="true"
+                android:text="/storage/emulated/0/文件树生成源码/" />
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/generateZipBtn"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="生成 ZIP 并保存" />
+    </LinearLayout>
+
+    <!-- ========= 文件夹模式内容区域 ========= -->
+    <LinearLayout
+        android:id="@+id/pathModeLayout"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:visibility="gone">
 
         <EditText
             android:id="@+id/inputPath"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
             android:hint="输入文件夹路径，如 /storage/emulated/0/压缩/"
             android:inputType="textUri"
             android:singleLine="true" />
-    </LinearLayout>
 
-    <!-- 文件树文本说明 -->
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="输入文件树（目录以“/”结尾）"
-        android:textSize="16sp"
-        android:textStyle="bold"
-        android:layout_marginTop="12dp"
-        android:layout_marginBottom="8dp" />
-
-    <!-- 文件树编辑区 -->
-    <EditText
-        android:id="@+id/inputTree"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:gravity="top|start"
-        android:inputType="textMultiLine|textNoSuggestions"
-        android:hint="在此粘贴树形结构，或从文件夹模式生成..."
-        android:textSize="14sp"
-        android:fontFamily="monospace"
-        android:background="@android:drawable/edit_text" />
-
-    <!-- 保存路径（仅文本模式显示） -->
-    <LinearLayout
-        android:id="@+id/savePathLayout"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_marginTop="8dp"
-        android:gravity="center_vertical">
+        <Button
+            android:id="@+id/generateTreeBtn"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="生成文件树" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="保存至："
-            android:textSize="14sp" />
+            android:text="生成的文件树："
+            android:textSize="14sp"
+            android:layout_marginTop="12dp"
+            android:layout_marginBottom="4dp" />
 
-        <EditText
-            android:id="@+id/savePath"
-            android:layout_width="0dp"
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1">
+
+            <TextView
+                android:id="@+id/treeOutput"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:fontFamily="monospace"
+                android:textSize="13sp"
+                android:padding="8dp"
+                android:background="@android:drawable/edit_text"
+                android:textIsSelectable="true"
+                android:text="" />
+        </ScrollView>
+
+        <Button
+            android:id="@+id/copyBtn"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:inputType="textUri"
-            android:singleLine="true"
-            android:text="/storage/emulated/0/文件树生成源码/" />
+            android:layout_marginTop="8dp"
+            android:text="复制到剪贴板" />
     </LinearLayout>
-
-    <!-- 多功能按钮（文本模式：生成ZIP / 文件夹模式：复制） -->
-    <Button
-        android:id="@+id/generateBtn"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
-        android:text="生成 ZIP 并保存到内部存储" />
 
 </LinearLayout>
