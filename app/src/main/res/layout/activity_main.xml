@@ -58,7 +58,7 @@
             android:id="@+id/generateTreeBtn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="生成文件树" />
+            android:text="复制" />
     </LinearLayout>
 
     <!-- 文本模式说明 -->
