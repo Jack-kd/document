@@ -32,6 +32,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var modeGroup: RadioGroup
     private lateinit var pathLayout: LinearLayout
     private lateinit var inputPath: EditText
+    private lateinit var savePathLayout: LinearLayout
+    private lateinit var savePath: EditText
 
     private val REQUEST_MANAGE_STORAGE = 1001
     private val REQUEST_WRITE_STORAGE = 1002
@@ -45,29 +47,43 @@ class MainActivity : AppCompatActivity() {
         modeGroup = findViewById(R.id.modeGroup)
         pathLayout = findViewById(R.id.pathLayout)
         inputPath = findViewById(R.id.inputPath)
+        savePathLayout = findViewById(R.id.savePathLayout)
+        savePath = findViewById(R.id.savePath)
 
-        // 初始状态：文本模式
+        // 默认文本模式
         setupTextMode()
 
-        // 模式切换监听
+        // 模式切换
         modeGroup.setOnCheckedChangeListener { _, checkedId ->
             when (checkedId) {
                 R.id.modeText -> {
                     pathLayout.visibility = android.view.View.GONE
+                    savePathLayout.visibility = android.view.View.VISIBLE
                     setupTextMode()
                 }
                 R.id.modePath -> {
                     pathLayout.visibility = android.view.View.VISIBLE
+                    savePathLayout.visibility = android.view.View.GONE
                     setupPathMode()
                 }
             }
         }
+
+        // 自动检查权限
+        checkPermissionOnStart()
     }
 
-    // 设置为文本模式：按钮文字和功能
+    // 打开应用时立即检查权限，若无权限则自动跳转
+    private fun checkPermissionOnStart() {
+        if (!checkPermission()) {
+            requestPermission()
+        }
+    }
+
     private fun setupTextMode() {
-        generateBtn.text = "生成 ZIP 并保存到内部存储"
+        generateBtn.text = "生成 ZIP 并保存"
         generateBtn.setOnClickListener {
+            // 按钮点击时再次确认权限（防止用户在设置里撤回）
             if (checkPermission()) {
                 generateFromText()
             } else {
@@ -76,7 +92,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // 设置为文件夹模式：按钮文字和功能
     private fun setupPathMode() {
         generateBtn.text = "复制"
         generateBtn.setOnClickListener {
@@ -88,7 +103,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // ---------- 权限处理 ----------
+    // ---------- 权限相关 ----------
     private fun checkPermission(): Boolean {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             Environment.isExternalStorageManager()
@@ -124,7 +139,7 @@ class MainActivity : AppCompatActivity() {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == REQUEST_MANAGE_STORAGE) {
             if (checkPermission()) {
-                Toast.makeText(this, "权限已获取，请重新操作", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "权限已获取", Toast.LENGTH_SHORT).show()
             } else {
                 Toast.makeText(this, "需要所有文件访问权限", Toast.LENGTH_SHORT).show()
             }
@@ -137,7 +152,7 @@ class MainActivity : AppCompatActivity() {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == REQUEST_WRITE_STORAGE) {
             if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                Toast.makeText(this, "权限已获取，请重新操作", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "权限已获取", Toast.LENGTH_SHORT).show()
             } else {
                 Toast.makeText(this, "需要存储权限", Toast.LENGTH_SHORT).show()
             }
@@ -151,20 +166,34 @@ class MainActivity : AppCompatActivity() {
             Toast.makeText(this, "请输入文件树", Toast.LENGTH_SHORT).show()
             return
         }
+        val destDirPath = savePath.text.toString().trim()
+        if (destDirPath.isEmpty()) {
+            Toast.makeText(this, "请输入保存路径", Toast.LENGTH_SHORT).show()
+            return
+        }
+
         generateBtn.isEnabled = false
         CoroutineScope(Dispatchers.IO).launch {
             try {
+                // 确保目标目录存在
+                val destDir = File(destDirPath)
+                if (!destDir.exists()) {
+                    destDir.mkdirs()
+                }
+                // 在缓存目录生成临时文件树
                 val tmpRoot = File(cacheDir, "tree_gen_${System.currentTimeMillis()}")
                 tmpRoot.mkdirs()
                 parseAndCreate(treeText, tmpRoot)
 
+                // 打包 ZIP
                 val zipFile = File(cacheDir, "output_${System.currentTimeMillis()}.zip")
                 zipDirectory(tmpRoot, zipFile)
 
-                val publicDir = Environment.getExternalStorageDirectory()
-                val destFile = File(publicDir, "file_tree_${System.currentTimeMillis()}.zip")
+                // 复制到用户指定目录
+                val destFile = File(destDir, "file_tree_${System.currentTimeMillis()}.zip")
                 zipFile.copyTo(destFile, overwrite = true)
 
+                // 清理临时文件
                 tmpRoot.deleteRecursively()
                 zipFile.delete()
 
@@ -198,13 +227,9 @@ class MainActivity : AppCompatActivity() {
                     }
                     return@launch
                 }
-
                 val tree = buildFileTree(sourceDir)
-
                 withContext(Dispatchers.Main) {
-                    // 填入输入框便于查看
                     inputTree.setText(tree)
-                    // 复制到剪贴板
                     val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                     val clip = ClipData.newPlainText("文件树", tree)
                     clipboard.setPrimaryClip(clip)
@@ -227,13 +252,11 @@ class MainActivity : AppCompatActivity() {
         val dirs = children.filter { it.isDirectory }
         val files = children.filter { it.isFile }
         val allItems = dirs + files
-
         for (i in allItems.indices) {
             val item = allItems[i]
             val isLast = i == allItems.size - 1
             val connector = if (isLast) "└── " else "├── "
             val nextPrefix = if (isLast) "    " else "│   "
-
             if (item.isDirectory) {
                 sb.appendLine(prefix + connector + item.name + "/")
                 sb.append(buildFileTree(item, prefix + nextPrefix))
@@ -244,7 +267,7 @@ class MainActivity : AppCompatActivity() {
         return sb.toString()
     }
 
-    /** 解析文本树，生成目录和空文件 */
+    /** 解析文本树创建目录和空文件 */
     private fun parseAndCreate(text: String, rootDir: File) {
         val lines = text.lines().filter { it.isNotBlank() }
         val stack = mutableListOf(rootDir)
@@ -256,9 +279,7 @@ class MainActivity : AppCompatActivity() {
                 if (sub.startsWith("│   ") || sub.startsWith("    ")) {
                     depth++
                     i += 4
-                } else {
-                    break
-                }
+                } else break
             }
             var name = line.substring(i).trim()
             if (name.startsWith("├── ") || name.startsWith("└── ")) {
@@ -267,24 +288,15 @@ class MainActivity : AppCompatActivity() {
                 name = name.substring(3).trim()
             }
             if (name.isEmpty()) continue
-
-            while (stack.size > depth + 1) {
-                stack.removeAt(stack.lastIndex)
-            }
-            while (stack.size <= depth) {
-                stack.add(stack.last())
-            }
+            while (stack.size > depth + 1) stack.removeAt(stack.lastIndex)
+            while (stack.size <= depth) stack.add(stack.last())
             val parentDir = stack.last()
-
             if (name.endsWith("/")) {
                 val dirName = name.removeSuffix("/")
                 val newDir = File(parentDir, dirName)
                 newDir.mkdirs()
-                if (stack.size > depth + 1) {
-                    stack[depth + 1] = newDir
-                } else {
-                    stack.add(newDir)
-                }
+                if (stack.size > depth + 1) stack[depth + 1] = newDir
+                else stack.add(newDir)
             } else {
                 val file = File(parentDir, name)
                 file.parentFile?.mkdirs()
@@ -302,9 +314,7 @@ class MainActivity : AppCompatActivity() {
                 }
                 if (entryName.isEmpty()) return@forEach
                 zos.putNextEntry(ZipEntry(entryName))
-                if (file.isFile) {
-                    FileInputStream(file).copyTo(zos)
-                }
+                if (file.isFile) FileInputStream(file).copyTo(zos)
                 zos.closeEntry()
             }
         }
