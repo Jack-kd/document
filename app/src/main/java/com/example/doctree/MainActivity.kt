@@ -1,5 +1,8 @@
 package com.example.doctree
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -45,7 +48,7 @@ class MainActivity : AppCompatActivity() {
         inputPath = findViewById(R.id.inputPath)
         generateTreeBtn = findViewById(R.id.generateTreeBtn)
 
-        // 模式切换监听
+        // 模式切换
         modeGroup.setOnCheckedChangeListener { _, checkedId ->
             when (checkedId) {
                 R.id.modeText -> {
@@ -57,7 +60,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // 文本模式的生成 ZIP
+        // 文本模式：生成 ZIP
         generateBtn.setOnClickListener {
             if (checkPermission()) {
                 generateFromText()
@@ -66,10 +69,10 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // 文件夹模式：生成文件树文本并填入输入框
+        // 文件夹模式：生成树形文本并复制
         generateTreeBtn.setOnClickListener {
             if (checkPermission()) {
-                generateTreeFromPath()
+                generateTreeAndCopy()
             } else {
                 requestPermission()
             }
@@ -132,7 +135,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // ---------- 文本模式生成 ZIP ----------
+    // ---------- 文本模式：生成 ZIP ----------
     private fun generateFromText() {
         val treeText = inputTree.text.toString().trim()
         if (treeText.isEmpty()) {
@@ -169,8 +172,8 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // ---------- 文件夹模式：生成文件树文本 ----------
-    private fun generateTreeFromPath() {
+    // ---------- 文件夹模式：生成文件树并复制到剪贴板 ----------
+    private fun generateTreeAndCopy() {
         val path = inputPath.text.toString().trim()
         if (path.isEmpty()) {
             Toast.makeText(this, "请输入文件夹路径", Toast.LENGTH_SHORT).show()
@@ -189,12 +192,15 @@ class MainActivity : AppCompatActivity() {
 
                 // 生成树形文本
                 val tree = buildFileTree(sourceDir)
+
                 withContext(Dispatchers.Main) {
+                    // 填入输入框便于查看或打包
                     inputTree.setText(tree)
-                    // 自动切换到文本模式，方便查看和修改
-                    modeGroup.check(R.id.modeText)
-                    pathLayout.visibility = android.view.View.GONE
-                    Toast.makeText(this@MainActivity, "文件树已生成，可编辑后打包", Toast.LENGTH_SHORT).show()
+                    // 复制到剪贴板
+                    val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                    val clip = ClipData.newPlainText("文件树", tree)
+                    clipboard.setPrimaryClip(clip)
+                    Toast.makeText(this@MainActivity, "已复制文件树到剪贴板，并填入编辑区", Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
@@ -212,7 +218,6 @@ class MainActivity : AppCompatActivity() {
     private fun buildFileTree(dir: File, prefix: String = ""): String {
         val sb = StringBuilder()
         val children = dir.listFiles()?.sortedBy { it.name } ?: return ""
-        // 分开目录和文件，目录在前
         val dirs = children.filter { it.isDirectory }
         val files = children.filter { it.isFile }
         val allItems = dirs + files
@@ -225,7 +230,6 @@ class MainActivity : AppCompatActivity() {
 
             if (item.isDirectory) {
                 sb.appendLine(prefix + connector + item.name + "/")
-                // 递归子目录
                 sb.append(buildFileTree(item, prefix + nextPrefix))
             } else {
                 sb.appendLine(prefix + connector + item.name)
@@ -234,7 +238,7 @@ class MainActivity : AppCompatActivity() {
         return sb.toString()
     }
 
-    // ---------- 文本树解析生成目录和文件 ----------
+    // ---------- 解析文本树生成目录和文件 ----------
     private fun parseAndCreate(text: String, rootDir: File) {
         val lines = text.lines().filter { it.isNotBlank() }
         val stack = mutableListOf(rootDir)
