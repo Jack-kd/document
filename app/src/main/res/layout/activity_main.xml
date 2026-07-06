@@ -5,12 +5,12 @@
     android:orientation="vertical"
     android:padding="16dp">
 
-    <!-- 留出顶部间距，让模式选择不那么靠顶 -->
+    <!-- 顶部间距，让模式选择舒适 -->
     <View
         android:layout_width="match_parent"
         android:layout_height="24dp" />
 
-    <!-- 模式切换栏 -->
+    <!-- 模式切换 -->
     <RadioGroup
         android:id="@+id/modeGroup"
         android:layout_width="match_parent"
@@ -59,7 +59,7 @@
             android:singleLine="true" />
     </LinearLayout>
 
-    <!-- 文本编辑区域说明 -->
+    <!-- 文件树文本说明 -->
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -69,7 +69,7 @@
         android:layout_marginTop="12dp"
         android:layout_marginBottom="8dp" />
 
-    <!-- 可编辑的文件树文本区域 -->
+    <!-- 文件树编辑区 -->
     <EditText
         android:id="@+id/inputTree"
         android:layout_width="match_parent"
@@ -82,7 +82,32 @@
         android:fontFamily="monospace"
         android:background="@android:drawable/edit_text" />
 
-    <!-- 底部多功能按钮（文本/文件夹模式会动态改变） -->
+    <!-- 保存路径（仅文本模式显示） -->
+    <LinearLayout
+        android:id="@+id/savePathLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="8dp"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="保存至："
+            android:textSize="14sp" />
+
+        <EditText
+            android:id="@+id/savePath"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:inputType="textUri"
+            android:singleLine="true"
+            android:text="/storage/emulated/0/文件树生成源码/" />
+    </LinearLayout>
+
+    <!-- 多功能按钮（文本模式：生成ZIP / 文件夹模式：复制） -->
     <Button
         android:id="@+id/generateBtn"
         android:layout_width="match_parent"
