@@ -14,6 +14,7 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.RadioGroup
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -27,13 +28,20 @@ import java.util.zip.ZipOutputStream
 
 class MainActivity : AppCompatActivity() {
 
+    // 文本模式组件
+    private lateinit var textModeLayout: LinearLayout
     private lateinit var inputTree: EditText
-    private lateinit var generateBtn: Button
-    private lateinit var modeGroup: RadioGroup
-    private lateinit var pathLayout: LinearLayout
-    private lateinit var inputPath: EditText
-    private lateinit var savePathLayout: LinearLayout
     private lateinit var savePath: EditText
+    private lateinit var generateZipBtn: Button
+
+    // 文件夹模式组件
+    private lateinit var pathModeLayout: LinearLayout
+    private lateinit var inputPath: EditText
+    private lateinit var generateTreeBtn: Button
+    private lateinit var treeOutput: TextView
+    private lateinit var copyBtn: Button
+
+    private lateinit var modeGroup: RadioGroup
 
     private val REQUEST_MANAGE_STORAGE = 1001
     private val REQUEST_WRITE_STORAGE = 1002
@@ -42,30 +50,66 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        // 绑定视图
+        textModeLayout = findViewById(R.id.textModeLayout)
         inputTree = findViewById(R.id.inputTree)
-        generateBtn = findViewById(R.id.generateBtn)
-        modeGroup = findViewById(R.id.modeGroup)
-        pathLayout = findViewById(R.id.pathLayout)
-        inputPath = findViewById(R.id.inputPath)
-        savePathLayout = findViewById(R.id.savePathLayout)
         savePath = findViewById(R.id.savePath)
+        generateZipBtn = findViewById(R.id.generateZipBtn)
 
-        // 默认文本模式
-        setupTextMode()
+        pathModeLayout = findViewById(R.id.pathModeLayout)
+        inputPath = findViewById(R.id.inputPath)
+        generateTreeBtn = findViewById(R.id.generateTreeBtn)
+        treeOutput = findViewById(R.id.treeOutput)
+        copyBtn = findViewById(R.id.copyBtn)
+
+        modeGroup = findViewById(R.id.modeGroup)
+
+        // 默认显示文本模式
+        textModeLayout.visibility = android.view.View.VISIBLE
+        pathModeLayout.visibility = android.view.View.GONE
 
         // 模式切换
         modeGroup.setOnCheckedChangeListener { _, checkedId ->
             when (checkedId) {
                 R.id.modeText -> {
-                    pathLayout.visibility = android.view.View.GONE
-                    savePathLayout.visibility = android.view.View.VISIBLE
-                    setupTextMode()
+                    textModeLayout.visibility = android.view.View.VISIBLE
+                    pathModeLayout.visibility = android.view.View.GONE
                 }
                 R.id.modePath -> {
-                    pathLayout.visibility = android.view.View.VISIBLE
-                    savePathLayout.visibility = android.view.View.GONE
-                    setupPathMode()
+                    textModeLayout.visibility = android.view.View.GONE
+                    pathModeLayout.visibility = android.view.View.VISIBLE
                 }
+            }
+        }
+
+        // 文本模式：生成 ZIP
+        generateZipBtn.setOnClickListener {
+            if (checkPermission()) {
+                generateZipFromText()
+            } else {
+                requestPermission()
+            }
+        }
+
+        // 文件夹模式：生成文件树
+        generateTreeBtn.setOnClickListener {
+            if (checkPermission()) {
+                generateTreeFromPath()
+            } else {
+                requestPermission()
+            }
+        }
+
+        // 复制按钮
+        copyBtn.setOnClickListener {
+            val text = treeOutput.text.toString().trim()
+            if (text.isEmpty()) {
+                Toast.makeText(this, "请先生成文件树", Toast.LENGTH_SHORT).show()
+            } else {
+                val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                val clip = ClipData.newPlainText("文件树", text)
+                clipboard.setPrimaryClip(clip)
+                Toast.makeText(this, "已复制到剪贴板", Toast.LENGTH_SHORT).show()
             }
         }
 
@@ -73,33 +117,9 @@ class MainActivity : AppCompatActivity() {
         checkPermissionOnStart()
     }
 
-    // 打开应用时立即检查权限，若无权限则自动跳转
     private fun checkPermissionOnStart() {
         if (!checkPermission()) {
             requestPermission()
-        }
-    }
-
-    private fun setupTextMode() {
-        generateBtn.text = "生成 ZIP 并保存"
-        generateBtn.setOnClickListener {
-            // 按钮点击时再次确认权限（防止用户在设置里撤回）
-            if (checkPermission()) {
-                generateFromText()
-            } else {
-                requestPermission()
-            }
-        }
-    }
-
-    private fun setupPathMode() {
-        generateBtn.text = "复制"
-        generateBtn.setOnClickListener {
-            if (checkPermission()) {
-                generateTreeAndCopy()
-            } else {
-                requestPermission()
-            }
         }
     }
 
@@ -160,7 +180,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     // ---------- 文本模式：生成 ZIP ----------
-    private fun generateFromText() {
+    private fun generateZipFromText() {
         val treeText = inputTree.text.toString().trim()
         if (treeText.isEmpty()) {
             Toast.makeText(this, "请输入文件树", Toast.LENGTH_SHORT).show()
@@ -172,28 +192,22 @@ class MainActivity : AppCompatActivity() {
             return
         }
 
-        generateBtn.isEnabled = false
+        generateZipBtn.isEnabled = false
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                // 确保目标目录存在
                 val destDir = File(destDirPath)
-                if (!destDir.exists()) {
-                    destDir.mkdirs()
-                }
-                // 在缓存目录生成临时文件树
+                if (!destDir.exists()) destDir.mkdirs()
+
                 val tmpRoot = File(cacheDir, "tree_gen_${System.currentTimeMillis()}")
                 tmpRoot.mkdirs()
                 parseAndCreate(treeText, tmpRoot)
 
-                // 打包 ZIP
                 val zipFile = File(cacheDir, "output_${System.currentTimeMillis()}.zip")
                 zipDirectory(tmpRoot, zipFile)
 
-                // 复制到用户指定目录
                 val destFile = File(destDir, "file_tree_${System.currentTimeMillis()}.zip")
                 zipFile.copyTo(destFile, overwrite = true)
 
-                // 清理临时文件
                 tmpRoot.deleteRecursively()
                 zipFile.delete()
 
@@ -205,19 +219,19 @@ class MainActivity : AppCompatActivity() {
                     Toast.makeText(this@MainActivity, "错误: ${e.message}", Toast.LENGTH_LONG).show()
                 }
             } finally {
-                withContext(Dispatchers.Main) { generateBtn.isEnabled = true }
+                withContext(Dispatchers.Main) { generateZipBtn.isEnabled = true }
             }
         }
     }
 
-    // ---------- 文件夹模式：生成文件树并复制 ----------
-    private fun generateTreeAndCopy() {
+    // ---------- 文件夹模式：生成文件树 ----------
+    private fun generateTreeFromPath() {
         val path = inputPath.text.toString().trim()
         if (path.isEmpty()) {
             Toast.makeText(this, "请输入文件夹路径", Toast.LENGTH_SHORT).show()
             return
         }
-        generateBtn.isEnabled = false
+        generateTreeBtn.isEnabled = false
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val sourceDir = File(path)
@@ -229,18 +243,15 @@ class MainActivity : AppCompatActivity() {
                 }
                 val tree = buildFileTree(sourceDir)
                 withContext(Dispatchers.Main) {
-                    inputTree.setText(tree)
-                    val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                    val clip = ClipData.newPlainText("文件树", tree)
-                    clipboard.setPrimaryClip(clip)
-                    Toast.makeText(this@MainActivity, "已复制文件树到剪贴板", Toast.LENGTH_SHORT).show()
+                    treeOutput.text = tree
+                    Toast.makeText(this@MainActivity, "生成完毕，可点击复制", Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
                     Toast.makeText(this@MainActivity, "错误: ${e.message}", Toast.LENGTH_LONG).show()
                 }
             } finally {
-                withContext(Dispatchers.Main) { generateBtn.isEnabled = true }
+                withContext(Dispatchers.Main) { generateTreeBtn.isEnabled = true }
             }
         }
     }
@@ -267,7 +278,7 @@ class MainActivity : AppCompatActivity() {
         return sb.toString()
     }
 
-    /** 解析文本树创建目录和空文件 */
+    /** 解析文本树创建空文件和目录 */
     private fun parseAndCreate(text: String, rootDir: File) {
         val lines = text.lines().filter { it.isNotBlank() }
         val stack = mutableListOf(rootDir)
