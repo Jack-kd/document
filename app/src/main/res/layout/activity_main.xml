@@ -5,6 +5,11 @@
     android:orientation="vertical"
     android:padding="16dp">
 
+    <!-- 留出顶部间距，让模式选择不那么靠顶 -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="24dp" />
+
     <!-- 模式切换栏 -->
     <RadioGroup
         android:id="@+id/modeGroup"
