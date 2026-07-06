@@ -1,4 +1,3 @@
-// 文件位置：document/app/src/main/java/com/example/doctree/MainActivity.kt
 package com.example.doctree
 
 import android.content.Intent
@@ -10,6 +9,8 @@ import android.os.Environment
 import android.provider.Settings
 import android.widget.Button
 import android.widget.EditText
+import android.widget.LinearLayout
+import android.widget.RadioGroup
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -25,6 +26,11 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var inputTree: EditText
     private lateinit var generateBtn: Button
+    private lateinit var modeGroup: RadioGroup
+    private lateinit var pathLayout: LinearLayout
+    private lateinit var inputPath: EditText
+    private lateinit var generateTreeBtn: Button
+
     private val REQUEST_MANAGE_STORAGE = 1001
     private val REQUEST_WRITE_STORAGE = 1002
 
@@ -34,23 +40,49 @@ class MainActivity : AppCompatActivity() {
 
         inputTree = findViewById(R.id.inputTree)
         generateBtn = findViewById(R.id.generateBtn)
+        modeGroup = findViewById(R.id.modeGroup)
+        pathLayout = findViewById(R.id.pathLayout)
+        inputPath = findViewById(R.id.inputPath)
+        generateTreeBtn = findViewById(R.id.generateTreeBtn)
 
+        // 模式切换监听
+        modeGroup.setOnCheckedChangeListener { _, checkedId ->
+            when (checkedId) {
+                R.id.modeText -> {
+                    pathLayout.visibility = android.view.View.GONE
+                }
+                R.id.modePath -> {
+                    pathLayout.visibility = android.view.View.VISIBLE
+                }
+            }
+        }
+
+        // 文本模式的生成 ZIP
         generateBtn.setOnClickListener {
             if (checkPermission()) {
-                generateFileTree()
+                generateFromText()
+            } else {
+                requestPermission()
+            }
+        }
+
+        // 文件夹模式：生成文件树文本并填入输入框
+        generateTreeBtn.setOnClickListener {
+            if (checkPermission()) {
+                generateTreeFromPath()
             } else {
                 requestPermission()
             }
         }
     }
 
+    // ---------- 权限处理 ----------
     private fun checkPermission(): Boolean {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             Environment.isExternalStorageManager()
         } else {
             ContextCompat.checkSelfPermission(
-                this,
-                android.Manifest.permission.WRITE_EXTERNAL_STORAGE
+                this, android.Manifest.permission.WRITE_EXTERNAL_STORAGE
             ) == PackageManager.PERMISSION_GRANTED
         }
     }
@@ -62,7 +94,6 @@ class MainActivity : AppCompatActivity() {
                 intent.data = Uri.parse("package:$packageName")
                 startActivityForResult(intent, REQUEST_MANAGE_STORAGE)
             } catch (e: Exception) {
-                // 如果无法启动设置界面，直接打开应用详情
                 val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
                 intent.data = Uri.parse("package:$packageName")
                 startActivity(intent)
@@ -81,88 +112,133 @@ class MainActivity : AppCompatActivity() {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == REQUEST_MANAGE_STORAGE) {
             if (checkPermission()) {
-                generateFileTree()
+                Toast.makeText(this, "权限已获取，请重新操作", Toast.LENGTH_SHORT).show()
             } else {
-                Toast.makeText(this, "需要所有文件访问权限才能保存ZIP", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "需要所有文件访问权限", Toast.LENGTH_SHORT).show()
             }
         }
     }
 
     override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
+        requestCode: Int, permissions: Array<out String>, grantResults: IntArray
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == REQUEST_WRITE_STORAGE) {
             if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                generateFileTree()
+                Toast.makeText(this, "权限已获取，请重新操作", Toast.LENGTH_SHORT).show()
             } else {
                 Toast.makeText(this, "需要存储权限", Toast.LENGTH_SHORT).show()
             }
         }
     }
 
-    private fun generateFileTree() {
+    // ---------- 文本模式生成 ZIP ----------
+    private fun generateFromText() {
         val treeText = inputTree.text.toString().trim()
         if (treeText.isEmpty()) {
             Toast.makeText(this, "请输入文件树", Toast.LENGTH_SHORT).show()
             return
         }
-
-        // 禁用按钮，防止重复点击
         generateBtn.isEnabled = false
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                // 1. 在缓存目录创建临时根目录
                 val tmpRoot = File(cacheDir, "tree_gen_${System.currentTimeMillis()}")
                 tmpRoot.mkdirs()
-
-                // 2. 解析并生成文件树
                 parseAndCreate(treeText, tmpRoot)
 
-                // 3. 打包为ZIP
                 val zipFile = File(cacheDir, "output_${System.currentTimeMillis()}.zip")
                 zipDirectory(tmpRoot, zipFile)
 
-                // 4. 复制到公共存储
-                val publicDir = Environment.getExternalStorageDirectory()  // /storage/emulated/0
+                val publicDir = Environment.getExternalStorageDirectory()
                 val destFile = File(publicDir, "file_tree_${System.currentTimeMillis()}.zip")
                 zipFile.copyTo(destFile, overwrite = true)
 
-                // 5. 清理临时文件
                 tmpRoot.deleteRecursively()
                 zipFile.delete()
 
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(
-                        this@MainActivity,
-                        "ZIP 已保存至: ${destFile.absolutePath}",
-                        Toast.LENGTH_LONG
-                    ).show()
+                    Toast.makeText(this@MainActivity, "ZIP 已保存至: ${destFile.absolutePath}", Toast.LENGTH_LONG).show()
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
                     Toast.makeText(this@MainActivity, "错误: ${e.message}", Toast.LENGTH_LONG).show()
                 }
             } finally {
-                withContext(Dispatchers.Main) {
-                    generateBtn.isEnabled = true
+                withContext(Dispatchers.Main) { generateBtn.isEnabled = true }
+            }
+        }
+    }
+
+    // ---------- 文件夹模式：生成文件树文本 ----------
+    private fun generateTreeFromPath() {
+        val path = inputPath.text.toString().trim()
+        if (path.isEmpty()) {
+            Toast.makeText(this, "请输入文件夹路径", Toast.LENGTH_SHORT).show()
+            return
+        }
+        generateTreeBtn.isEnabled = false
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val sourceDir = File(path)
+                if (!sourceDir.exists() || !sourceDir.isDirectory) {
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(this@MainActivity, "路径不存在或不是文件夹", Toast.LENGTH_LONG).show()
+                    }
+                    return@launch
                 }
+
+                // 生成树形文本
+                val tree = buildFileTree(sourceDir)
+                withContext(Dispatchers.Main) {
+                    inputTree.setText(tree)
+                    // 自动切换到文本模式，方便查看和修改
+                    modeGroup.check(R.id.modeText)
+                    pathLayout.visibility = android.view.View.GONE
+                    Toast.makeText(this@MainActivity, "文件树已生成，可编辑后打包", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(this@MainActivity, "错误: ${e.message}", Toast.LENGTH_LONG).show()
+                }
+            } finally {
+                withContext(Dispatchers.Main) { generateTreeBtn.isEnabled = true }
             }
         }
     }
 
     /**
-     * 解析树形文本，在 rootDir 下创建对应目录和空文件
+     * 递归生成树形结构字符串，类似 tree 命令输出
      */
+    private fun buildFileTree(dir: File, prefix: String = ""): String {
+        val sb = StringBuilder()
+        val children = dir.listFiles()?.sortedBy { it.name } ?: return ""
+        // 分开目录和文件，目录在前
+        val dirs = children.filter { it.isDirectory }
+        val files = children.filter { it.isFile }
+        val allItems = dirs + files
+
+        for (i in allItems.indices) {
+            val item = allItems[i]
+            val isLast = i == allItems.size - 1
+            val connector = if (isLast) "└── " else "├── "
+            val nextPrefix = if (isLast) "    " else "│   "
+
+            if (item.isDirectory) {
+                sb.appendLine(prefix + connector + item.name + "/")
+                // 递归子目录
+                sb.append(buildFileTree(item, prefix + nextPrefix))
+            } else {
+                sb.appendLine(prefix + connector + item.name)
+            }
+        }
+        return sb.toString()
+    }
+
+    // ---------- 文本树解析生成目录和文件 ----------
     private fun parseAndCreate(text: String, rootDir: File) {
         val lines = text.lines().filter { it.isNotBlank() }
-        // 栈中存储当前层级对应的目录文件，索引0为根（rootDir）
         val stack = mutableListOf(rootDir)
-
         for (line in lines) {
-            // 计算深度：以4个空格或"│   "为一个缩进单元
             var depth = 0
             var i = 0
             while (i < line.length) {
@@ -174,54 +250,39 @@ class MainActivity : AppCompatActivity() {
                     break
                 }
             }
-
-            // 提取名称：移除可能的树形符号 "├── " 或 "└── "
             var name = line.substring(i).trim()
             if (name.startsWith("├── ") || name.startsWith("└── ")) {
                 name = name.substring(4).trim()
             } else if (name.startsWith("├──") || name.startsWith("└──")) {
-                // 兼容无空格的情况
                 name = name.substring(3).trim()
             }
-
             if (name.isEmpty()) continue
 
-            // 调整栈深度
             while (stack.size > depth + 1) {
                 stack.removeAt(stack.lastIndex)
             }
-            // 确保栈深度至少为 depth+1
             while (stack.size <= depth) {
                 stack.add(stack.last())
             }
-
             val parentDir = stack.last()
 
             if (name.endsWith("/")) {
-                // 目录：去除末尾斜杠
                 val dirName = name.removeSuffix("/")
                 val newDir = File(parentDir, dirName)
                 newDir.mkdirs()
-                // 将新目录压入栈，供下一层使用
                 if (stack.size > depth + 1) {
                     stack[depth + 1] = newDir
                 } else {
                     stack.add(newDir)
                 }
             } else {
-                // 文件
                 val file = File(parentDir, name)
                 file.parentFile?.mkdirs()
                 file.createNewFile()
-                // 如果下一行深度更深，说明这个名称其实是一个目录，但用户未加斜杠
-                // 简单处理：不修改栈，等待后续判断？这里暂不处理。
             }
         }
     }
 
-    /**
-     * 递归压缩目录
-     */
     private fun zipDirectory(sourceDir: File, zipFile: File) {
         ZipOutputStream(FileOutputStream(zipFile)).use { zos ->
             sourceDir.walkTopDown().forEach { file ->
