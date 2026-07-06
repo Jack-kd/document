@@ -6,27 +6,35 @@
     android:padding="16dp">
 
     <RadioGroup
-        android:id="@+id/modeGroup"
-        android:layout_width="wrap_content"
+    <RadioGroup
+    android:id="@+id/modeGroup"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:checkedButton="@id/modeText">
+
+    <RadioButton
+        android:id="@+id/modeText"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
-        android:orientation="horizontal"
-        android:checkedButton="@id/modeText">
-        <RadioButton
-            android:id="@+id/modeText"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="文本模式"
-            android:paddingStart="12dp"
-            android:paddingEnd="12dp" />
-        <RadioButton
-            android:id="@+id/modePath"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="文件夹模式"
-            android:paddingStart="12dp"
-            android:paddingEnd="12dp" />
-    </RadioGroup>
+        android:layout_weight="1"
+        android:text="文本模式"
+        android:gravity="center"
+        android:button="@null"
+        android:background="?attr/selectableItemBackground"
+        android:paddingVertical="12dp" />
+
+    <RadioButton
+        android:id="@+id/modePath"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:text="文件夹模式"
+        android:gravity="center"
+        android:button="@null"
+        android:background="?attr/selectableItemBackground"
+        android:paddingVertical="12dp" />
+</RadioGroup>
 
     <LinearLayout
         android:id="@+id/pathLayout"
