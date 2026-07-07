@@ -61,7 +61,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="来源："
-                android:textSize="14sp" />
+                android:textSize="14sp"
+                android:textColor="?android:textColorPrimary" />
 
             <RadioGroup
                 android:id="@+id/sourceGroup"
@@ -96,8 +97,10 @@
             android:textSize="16sp"
             android:textStyle="bold"
             android:layout_marginTop="8dp"
-            android:layout_marginBottom="8dp" />
+            android:layout_marginBottom="8dp"
+            android:textColor="?android:textColorPrimary" />
 
+        <!-- 优化后的输入框：使用主题自适应颜色 -->
         <EditText
             android:id="@+id/inputTree"
             android:layout_width="match_parent"
@@ -108,7 +111,10 @@
             android:hint="在此粘贴树形结构..."
             android:textSize="14sp"
             android:fontFamily="monospace"
-            android:background="@android:drawable/edit_text" />
+            android:background="?attr/colorSurface"
+            android:textColor="?attr/colorOnSurface"
+            android:padding="8dp"
+            android:scrollbars="vertical" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -121,7 +127,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="保存至："
-                android:textSize="14sp" />
+                android:textSize="14sp"
+                android:textColor="?android:textColorPrimary" />
 
             <EditText
                 android:id="@+id/savePath"
@@ -130,7 +137,10 @@
                 android:layout_weight="1"
                 android:inputType="textUri"
                 android:singleLine="true"
-                android:text="/storage/emulated/0/文件树生成源码/" />
+                android:text="/storage/emulated/0/文件树生成源码/"
+                android:background="?attr/colorSurface"
+                android:textColor="?attr/colorOnSurface"
+                android:padding="8dp" />
         </LinearLayout>
 
         <Button
@@ -157,7 +167,10 @@
             android:layout_marginTop="12dp"
             android:hint="输入文件夹路径，如 /storage/emulated/0/压缩/"
             android:inputType="textUri"
-            android:singleLine="true" />
+            android:singleLine="true"
+            android:background="?attr/colorSurface"
+            android:textColor="?attr/colorOnSurface"
+            android:padding="8dp" />
 
         <Button
             android:id="@+id/generateTreeBtn"
@@ -172,13 +185,15 @@
             android:text="生成的文件树："
             android:textSize="14sp"
             android:layout_marginTop="12dp"
-            android:layout_marginBottom="4dp" />
+            android:layout_marginBottom="4dp"
+            android:textColor="?android:textColorPrimary" />
 
         <ScrollView
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1">
 
+            <!-- 优化后的输出框 -->
             <TextView
                 android:id="@+id/treeOutput"
                 android:layout_width="match_parent"
@@ -186,7 +201,8 @@
                 android:fontFamily="monospace"
                 android:textSize="13sp"
                 android:padding="8dp"
-                android:background="@android:drawable/edit_text"
+                android:background="?attr/colorSurface"
+                android:textColor="?attr/colorOnSurface"
                 android:textIsSelectable="true"
                 android:text="" />
         </ScrollView>
