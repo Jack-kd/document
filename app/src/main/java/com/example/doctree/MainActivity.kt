@@ -49,14 +49,12 @@ class MainActivity : AppCompatActivity() {
     private val REQUEST_MANAGE_STORAGE = 1001
     private val REQUEST_WRITE_STORAGE = 1002
 
-    // 当前选中的来源：true=DeepSeek, false=ChatGPT
     private var isDeepSeekSource = true
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        // 绑定视图
         textModeLayout = findViewById(R.id.textModeLayout)
         sourceGroup = findViewById(R.id.sourceGroup)
         inputTree = findViewById(R.id.inputTree)
@@ -71,11 +69,9 @@ class MainActivity : AppCompatActivity() {
 
         modeGroup = findViewById(R.id.modeGroup)
 
-        // 默认显示文本模式
         textModeLayout.visibility = android.view.View.VISIBLE
         pathModeLayout.visibility = android.view.View.GONE
 
-        // 模式切换
         modeGroup.setOnCheckedChangeListener { _, checkedId ->
             when (checkedId) {
                 R.id.modeText -> {
@@ -89,53 +85,37 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // 来源监听
         sourceGroup.setOnCheckedChangeListener { _, checkedId ->
             isDeepSeekSource = checkedId == R.id.sourceDeepSeek
         }
 
-        // 文本模式：生成 ZIP
         generateZipBtn.setOnClickListener {
-            if (checkPermission()) {
-                generateZipFromText()
-            } else {
-                requestPermission()
-            }
+            if (checkPermission()) generateZipFromText() else requestPermission()
         }
 
-        // 文件夹模式：生成文件树
         generateTreeBtn.setOnClickListener {
-            if (checkPermission()) {
-                generateTreeFromPath()
-            } else {
-                requestPermission()
-            }
+            if (checkPermission()) generateTreeFromPath() else requestPermission()
         }
 
-        // 复制按钮
         copyBtn.setOnClickListener {
             val text = treeOutput.text.toString().trim()
             if (text.isEmpty()) {
                 Toast.makeText(this, "请先生成文件树", Toast.LENGTH_SHORT).show()
             } else {
                 val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                val clip = ClipData.newPlainText("文件树", text)
-                clipboard.setPrimaryClip(clip)
+                clipboard.setPrimaryClip(ClipData.newPlainText("文件树", text))
                 Toast.makeText(this, "已复制到剪贴板", Toast.LENGTH_SHORT).show()
             }
         }
 
-        // 自动检查权限
         checkPermissionOnStart()
     }
 
     private fun checkPermissionOnStart() {
-        if (!checkPermission()) {
-            requestPermission()
-        }
+        if (!checkPermission()) requestPermission()
     }
 
-    // ---------- 权限相关 ----------
+    // ---------- 权限 ----------
     private fun checkPermission(): Boolean {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             Environment.isExternalStorageManager()
@@ -159,9 +139,7 @@ class MainActivity : AppCompatActivity() {
             }
         } else {
             ActivityCompat.requestPermissions(
-                this,
-                arrayOf(android.Manifest.permission.WRITE_EXTERNAL_STORAGE),
-                REQUEST_WRITE_STORAGE
+                this, arrayOf(android.Manifest.permission.WRITE_EXTERNAL_STORAGE), REQUEST_WRITE_STORAGE
             )
         }
     }
@@ -170,28 +148,26 @@ class MainActivity : AppCompatActivity() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == REQUEST_MANAGE_STORAGE) {
-            if (checkPermission()) {
-                Toast.makeText(this, "权限已获取", Toast.LENGTH_SHORT).show()
-            } else {
-                Toast.makeText(this, "需要所有文件访问权限", Toast.LENGTH_SHORT).show()
-            }
+            Toast.makeText(
+                this,
+                if (checkPermission()) "权限已获取" else "需要所有文件访问权限",
+                Toast.LENGTH_SHORT
+            ).show()
         }
     }
 
-    override fun onRequestPermissionsResult(
-        requestCode: Int, permissions: Array<out String>, grantResults: IntArray
-    ) {
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == REQUEST_WRITE_STORAGE) {
-            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                Toast.makeText(this, "权限已获取", Toast.LENGTH_SHORT).show()
-            } else {
-                Toast.makeText(this, "需要存储权限", Toast.LENGTH_SHORT).show()
-            }
+            Toast.makeText(
+                this,
+                if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) "权限已获取" else "需要存储权限",
+                Toast.LENGTH_SHORT
+            ).show()
         }
     }
 
-    // ---------- 文本模式：生成 ZIP ----------
+    // ---------- 文本模式生成 ZIP ----------
     private fun generateZipFromText() {
         var treeText = inputTree.text.toString().trim()
         if (treeText.isEmpty()) {
@@ -199,7 +175,6 @@ class MainActivity : AppCompatActivity() {
             return
         }
 
-        // 如果不是 DeepSeek 来源（即 ChatGPT），预处理补全目录 /
         if (!isDeepSeekSource) {
             treeText = preprocessChatGPTTree(treeText)
         }
@@ -244,70 +219,81 @@ class MainActivity : AppCompatActivity() {
     }
 
     /**
-     * 预处理 ChatGPT 风格的文件树，自动为有子项的条目名称添加 "/"
+     * 预处理 ChatGPT 风格的文件树文本，清除多余符号并重建为标准格式
      */
     private fun preprocessChatGPTTree(text: String): String {
         val lines = text.lines().filter { it.isNotBlank() }
-        if (lines.isEmpty()) return text
+        val items = mutableListOf<Pair<Int, String>>() // (深度, 名称)
 
-        // 解析每行的深度和名称（复用现有逻辑的部分思路）
-        data class LineInfo(val depth: Int, val prefix: String, val name: String, val raw: String)
-
-        val infos = mutableListOf<LineInfo>()
         for (line in lines) {
             var depth = 0
             var i = 0
-            // 计算深度，与 parseAndCreate 一致（4个空格或 "│   " 为一个缩进）
             while (i < line.length) {
                 val sub = line.substring(i)
                 if (sub.startsWith("│   ") || sub.startsWith("    ")) {
                     depth++
                     i += 4
-                } else {
-                    break
+                } else break
+            }
+
+            var remaining = line.substring(i).trimStart()
+            // 反复移除前导的树符号，直到只剩下名称
+            var changed = true
+            while (changed) {
+                changed = false
+                for (sym in listOf("├── ", "└── ", "├──", "└──", "│── ", "│──")) {
+                    if (remaining.startsWith(sym)) {
+                        remaining = remaining.substring(sym.length).trimStart()
+                        changed = true
+                        break
+                    }
                 }
             }
-            // 提取树符号后的名称
-            var name = line.substring(i).trimStart()   // 去掉前方可能有的空格
-            val prefix = line.substring(0, i) + line.substring(i).takeWhile { it == ' ' } // 保留缩进和树符号前的空格
-            // 移除树符号 "├── " 或 "└── " 或 "├──" "└──"
-            if (name.startsWith("├── ") || name.startsWith("└── ")) {
-                name = name.substring(4).trim()
-            } else if (name.startsWith("├──") || name.startsWith("└──")) {
-                name = name.substring(3).trim()
-            }
-            // 进一步去除可能的额外空格，但保留名称
-            infos.add(LineInfo(depth, prefix + line.substring(i).takeWhile { it == ' ' }, name, line))
+
+            // 移除残留的 │─ 等字符
+            remaining = remaining.trimStart('│', '─', ' ')
+            if (remaining.isEmpty()) continue
+
+            items.add(Pair(depth, remaining))
         }
 
-        // 为有子项的条目添加 "/" （如果还没有）
-        for (j in 0 until infos.size - 1) {
-            val current = infos[j]
-            val next = infos[j + 1]
-            if (next.depth > current.depth && !current.name.endsWith("/")) {
-                // 当前行是目录，添加斜杠
-                infos[j] = current.copy(name = current.name + "/")
+        // 为有子项的条目自动添加 "/"
+        for (j in 0 until items.size - 1) {
+            val (curDepth, curName) = items[j]
+            val (nextDepth, _) = items[j + 1]
+            if (nextDepth > curDepth && !curName.endsWith("/")) {
+                items[j] = Pair(curDepth, curName + "/")
             }
         }
 
-        // 重新组合文本
-        return infos.joinToString("\n") { info ->
-            // 重新构建行：前缀 + 名称（名称前可能需要还原树符号，但前缀已包含缩进和树符号前的空白，我们需把树符号重新加上）
-            // 实际上我们需要完整行，最简单是修改原行，但原行可能包含多余空格。
-            // 更好的办法：保留前缀，然后判断原行是否有树符号，有则追加树符号 + 名称。
-            val raw = info.raw
-            // 查找树符号位置，在原行末尾替换名称并加 "/"
-            val symbolIndex = raw.indexOf("──")
-            if (symbolIndex != -1) {
-                raw.substring(0, symbolIndex + 3) + " " + info.name
-            } else {
-                // 没有树符号，直接使用前缀 + 名称
-                info.prefix + info.name
+        // 重建标准格式的文本（DeepSeek 兼容）
+        val sb = StringBuilder()
+        val prefixStack = mutableListOf<String>() // 每个深度对应的前缀字符串
+
+        for (i in items.indices) {
+            val (depth, name) = items[i]
+
+            while (prefixStack.size > depth) prefixStack.removeAt(prefixStack.lastIndex)
+            while (prefixStack.size < depth) prefixStack.add("│   ")
+
+            val isLast = if (i == items.size - 1) true else {
+                val nextDepth = items[i + 1].first
+                nextDepth <= depth
+            }
+
+            val linePrefix = prefixStack.joinToString("")
+            val connector = if (isLast) "└── " else "├── "
+            sb.appendLine(linePrefix + connector + name)
+
+            if (isLast && depth > 0) {
+                prefixStack[depth - 1] = "    "
             }
         }
+
+        return sb.toString().trimEnd()
     }
 
-    // ---------- 文件夹模式：生成文件树 ----------
+    // ---------- 文件夹模式 ----------
     private fun generateTreeFromPath() {
         val path = inputPath.text.toString().trim()
         if (path.isEmpty()) {
@@ -339,7 +325,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    /** 递归生成文件树字符串 */
     private fun buildFileTree(dir: File, prefix: String = ""): String {
         val sb = StringBuilder()
         val children = dir.listFiles()?.sortedBy { it.name } ?: return ""
@@ -361,7 +346,7 @@ class MainActivity : AppCompatActivity() {
         return sb.toString()
     }
 
-    /** 解析文本树创建空文件和目录 */
+    // ---------- 解析工具 ----------
     private fun parseAndCreate(text: String, rootDir: File) {
         val lines = text.lines().filter { it.isNotBlank() }
         val stack = mutableListOf(rootDir)
@@ -376,15 +361,14 @@ class MainActivity : AppCompatActivity() {
                 } else break
             }
             var name = line.substring(i).trim()
-            if (name.startsWith("├── ") || name.startsWith("└── ")) {
-                name = name.substring(4).trim()
-            } else if (name.startsWith("├──") || name.startsWith("└──")) {
-                name = name.substring(3).trim()
-            }
+            if (name.startsWith("├── ") || name.startsWith("└── ")) name = name.substring(4).trim()
+            else if (name.startsWith("├──") || name.startsWith("└──")) name = name.substring(3).trim()
             if (name.isEmpty()) continue
+
             while (stack.size > depth + 1) stack.removeAt(stack.lastIndex)
             while (stack.size <= depth) stack.add(stack.last())
             val parentDir = stack.last()
+
             if (name.endsWith("/")) {
                 val dirName = name.removeSuffix("/")
                 val newDir = File(parentDir, dirName)
@@ -399,7 +383,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    /** 压缩目录为 ZIP */
     private fun zipDirectory(sourceDir: File, zipFile: File) {
         ZipOutputStream(FileOutputStream(zipFile)).use { zos ->
             sourceDir.walkTopDown().forEach { file ->
@@ -408,9 +391,7 @@ class MainActivity : AppCompatActivity() {
                 }
                 if (entryName.isEmpty()) return@forEach
                 zos.putNextEntry(ZipEntry(entryName))
-                if (file.isFile) {
-                    FileInputStream(file).copyTo(zos)
-                }
+                if (file.isFile) FileInputStream(file).copyTo(zos)
                 zos.closeEntry()
             }
         }
