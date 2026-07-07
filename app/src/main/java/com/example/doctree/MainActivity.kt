@@ -23,6 +23,8 @@ import kotlinx.coroutines.*
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
+import java.text.SimpleDateFormat
+import java.util.*
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 
@@ -30,6 +32,7 @@ class MainActivity : AppCompatActivity() {
 
     // 文本模式组件
     private lateinit var textModeLayout: LinearLayout
+    private lateinit var sourceGroup: RadioGroup
     private lateinit var inputTree: EditText
     private lateinit var savePath: EditText
     private lateinit var generateZipBtn: Button
@@ -46,12 +49,16 @@ class MainActivity : AppCompatActivity() {
     private val REQUEST_MANAGE_STORAGE = 1001
     private val REQUEST_WRITE_STORAGE = 1002
 
+    // 当前选中的来源：true=DeepSeek, false=ChatGPT
+    private var isDeepSeekSource = true
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
         // 绑定视图
         textModeLayout = findViewById(R.id.textModeLayout)
+        sourceGroup = findViewById(R.id.sourceGroup)
         inputTree = findViewById(R.id.inputTree)
         savePath = findViewById(R.id.savePath)
         generateZipBtn = findViewById(R.id.generateZipBtn)
@@ -80,6 +87,11 @@ class MainActivity : AppCompatActivity() {
                     pathModeLayout.visibility = android.view.View.VISIBLE
                 }
             }
+        }
+
+        // 来源监听
+        sourceGroup.setOnCheckedChangeListener { _, checkedId ->
+            isDeepSeekSource = checkedId == R.id.sourceDeepSeek
         }
 
         // 文本模式：生成 ZIP
@@ -181,11 +193,17 @@ class MainActivity : AppCompatActivity() {
 
     // ---------- 文本模式：生成 ZIP ----------
     private fun generateZipFromText() {
-        val treeText = inputTree.text.toString().trim()
+        var treeText = inputTree.text.toString().trim()
         if (treeText.isEmpty()) {
             Toast.makeText(this, "请输入文件树", Toast.LENGTH_SHORT).show()
             return
         }
+
+        // 如果不是 DeepSeek 来源（即 ChatGPT），预处理补全目录 /
+        if (!isDeepSeekSource) {
+            treeText = preprocessChatGPTTree(treeText)
+        }
+
         val destDirPath = savePath.text.toString().trim()
         if (destDirPath.isEmpty()) {
             Toast.makeText(this, "请输入保存路径", Toast.LENGTH_SHORT).show()
@@ -205,8 +223,8 @@ class MainActivity : AppCompatActivity() {
                 val zipFile = File(cacheDir, "output_${System.currentTimeMillis()}.zip")
                 zipDirectory(tmpRoot, zipFile)
 
-                val sdf = java.text.SimpleDateFormat("yyyyMMdd_HHmmss", java.util.Locale.getDefault())
-                val destFile = File(destDir, "${sdf.format(java.util.Date())}.zip")
+                val sdf = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault())
+                val destFile = File(destDir, "${sdf.format(Date())}.zip")
                 zipFile.copyTo(destFile, overwrite = true)
 
                 tmpRoot.deleteRecursively()
@@ -221,6 +239,70 @@ class MainActivity : AppCompatActivity() {
                 }
             } finally {
                 withContext(Dispatchers.Main) { generateZipBtn.isEnabled = true }
+            }
+        }
+    }
+
+    /**
+     * 预处理 ChatGPT 风格的文件树，自动为有子项的条目名称添加 "/"
+     */
+    private fun preprocessChatGPTTree(text: String): String {
+        val lines = text.lines().filter { it.isNotBlank() }
+        if (lines.isEmpty()) return text
+
+        // 解析每行的深度和名称（复用现有逻辑的部分思路）
+        data class LineInfo(val depth: Int, val prefix: String, val name: String, val raw: String)
+
+        val infos = mutableListOf<LineInfo>()
+        for (line in lines) {
+            var depth = 0
+            var i = 0
+            // 计算深度，与 parseAndCreate 一致（4个空格或 "│   " 为一个缩进）
+            while (i < line.length) {
+                val sub = line.substring(i)
+                if (sub.startsWith("│   ") || sub.startsWith("    ")) {
+                    depth++
+                    i += 4
+                } else {
+                    break
+                }
+            }
+            // 提取树符号后的名称
+            var name = line.substring(i).trimStart()   // 去掉前方可能有的空格
+            val prefix = line.substring(0, i) + line.substring(i).takeWhile { it == ' ' } // 保留缩进和树符号前的空格
+            // 移除树符号 "├── " 或 "└── " 或 "├──" "└──"
+            if (name.startsWith("├── ") || name.startsWith("└── ")) {
+                name = name.substring(4).trim()
+            } else if (name.startsWith("├──") || name.startsWith("└──")) {
+                name = name.substring(3).trim()
+            }
+            // 进一步去除可能的额外空格，但保留名称
+            infos.add(LineInfo(depth, prefix + line.substring(i).takeWhile { it == ' ' }, name, line))
+        }
+
+        // 为有子项的条目添加 "/" （如果还没有）
+        for (j in 0 until infos.size - 1) {
+            val current = infos[j]
+            val next = infos[j + 1]
+            if (next.depth > current.depth && !current.name.endsWith("/")) {
+                // 当前行是目录，添加斜杠
+                infos[j] = current.copy(name = current.name + "/")
+            }
+        }
+
+        // 重新组合文本
+        return infos.joinToString("\n") { info ->
+            // 重新构建行：前缀 + 名称（名称前可能需要还原树符号，但前缀已包含缩进和树符号前的空白，我们需把树符号重新加上）
+            // 实际上我们需要完整行，最简单是修改原行，但原行可能包含多余空格。
+            // 更好的办法：保留前缀，然后判断原行是否有树符号，有则追加树符号 + 名称。
+            val raw = info.raw
+            // 查找树符号位置，在原行末尾替换名称并加 "/"
+            val symbolIndex = raw.indexOf("──")
+            if (symbolIndex != -1) {
+                raw.substring(0, symbolIndex + 3) + " " + info.name
+            } else {
+                // 没有树符号，直接使用前缀 + 名称
+                info.prefix + info.name
             }
         }
     }
@@ -326,7 +408,9 @@ class MainActivity : AppCompatActivity() {
                 }
                 if (entryName.isEmpty()) return@forEach
                 zos.putNextEntry(ZipEntry(entryName))
-                if (file.isFile) FileInputStream(file).copyTo(zos)
+                if (file.isFile) {
+                    FileInputStream(file).copyTo(zos)
+                }
                 zos.closeEntry()
             }
         }
