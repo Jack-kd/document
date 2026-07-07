@@ -205,7 +205,8 @@ class MainActivity : AppCompatActivity() {
                 val zipFile = File(cacheDir, "output_${System.currentTimeMillis()}.zip")
                 zipDirectory(tmpRoot, zipFile)
 
-                val destFile = File(destDir, "file_tree_${System.currentTimeMillis()}.zip")
+                val sdf = java.text.SimpleDateFormat("yyyyMMdd_HHmmss", java.util.Locale.getDefault())
+                val destFile = File(destDir, "${sdf.format(java.util.Date())}.zip")
                 zipFile.copyTo(destFile, overwrite = true)
 
                 tmpRoot.deleteRecursively()
