@@ -1,217 +1,264 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+
     android:orientation="vertical"
-    android:padding="16dp">
 
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="24dp" />
+    android:padding="20dp"
 
-    <!-- 顶层模式切换 -->
-    <RadioGroup
-        android:id="@+id/modeGroup"
-        android:layout_width="match_parent"
+    android:background="@color/background">
+
+
+    <TextView
+
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:checkedButton="@id/modeText">
 
-        <RadioButton
-            android:id="@+id/modeText"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:button="@null"
-            android:background="?attr/selectableItemBackground"
-            android:paddingVertical="12dp"
-            android:text="文本模式" />
+        android:text="File Tree Studio"
 
-        <RadioButton
-            android:id="@+id/modePath"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:button="@null"
-            android:background="?attr/selectableItemBackground"
-            android:paddingVertical="12dp"
-            android:text="文件夹模式" />
-    </RadioGroup>
+        android:textSize="26sp"
 
-    <!-- ========= 文本模式区域 ========= -->
-    <LinearLayout
-        android:id="@+id/textModeLayout"
+        android:textStyle="bold"
+
+        android:textColor="@color/textPrimary"
+
+        android:layout_marginBottom="6dp"/>
+
+
+
+    <TextView
+
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+
+        android:text="智能生成项目结构"
+
+        android:textSize="14sp"
+
+        android:textColor="@color/textSecondary"
+
+        android:layout_marginBottom="20dp"/>
+
+
+
+
+    <com.google.android.material.card.MaterialCardView
+
+
+
+
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:orientation="vertical"
-        android:visibility="visible">
 
-        <!-- 来源选择 -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:layout_marginTop="12dp">
+        android:layout_height="wrap_content"
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="来源："
-                android:textSize="14sp"
-                android:textColor="?android:textColorPrimary" />
 
-            <RadioGroup
-                android:id="@+id/sourceGroup"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="horizontal"
-                android:checkedButton="@id/sourceDeepSeek">
+        app:cardCornerRadius="18dp"
 
-                <RadioButton
-                    android:id="@+id/sourceDeepSeek"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="DeepSeek"
-                    android:gravity="center" />
+        app:cardElevation="4dp"
 
-                <RadioButton
-                    android:id="@+id/sourceChatGPT"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="ChatGPT"
-                    android:gravity="center" />
-            </RadioGroup>
-        </LinearLayout>
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="输入文件树（目录以“/”结尾）"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            android:layout_marginTop="8dp"
-            android:layout_marginBottom="8dp"
-            android:textColor="?android:textColorPrimary" />
+        android:layout_marginBottom="16dp">
 
-        <!-- 优化后的输入框：使用主题自适应颜色 -->
-        <EditText
-            android:id="@+id/inputTree"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:gravity="top|start"
-            android:inputType="textMultiLine|textNoSuggestions"
-            android:hint="在此粘贴树形结构..."
-            android:textSize="14sp"
-            android:fontFamily="monospace"
-            android:background="?attr/colorSurface"
-            android:textColor="?attr/colorOnSurface"
-            android:padding="8dp"
-            android:scrollbars="vertical" />
 
         <LinearLayout
+
+
+
+
             android:layout_width="match_parent"
+
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginTop="8dp"
-            android:gravity="center_vertical">
+
+
+            android:padding="16dp"
+
+
+            android:orientation="vertical">
+
+
+
 
             <TextView
+
                 android:layout_width="wrap_content"
+
                 android:layout_height="wrap_content"
-                android:text="保存至："
-                android:textSize="14sp"
-                android:textColor="?android:textColorPrimary" />
+
+                android:text="输入目录结构"
+
+                android:textStyle="bold"
+
+                android:textSize="16sp"/>
+
+
+
 
             <EditText
-                android:id="@+id/savePath"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:inputType="textUri"
-                android:singleLine="true"
-                android:text="/storage/emulated/0/文件树生成源码/"
-                android:background="?attr/colorSurface"
-                android:textColor="?attr/colorOnSurface"
-                android:padding="8dp" />
+
+
+
+
+                android:id="@+id/editTree"
+
+
+                android:layout_width="match_parent"
+
+                android:layout_height="150dp"
+
+
+                android:gravity="top"
+
+                android:padding="12dp"
+
+
+                android:hint="例如：\napp/\n ├── src/\n └── build.gradle"
+
+
+                android:background="@drawable/bg_edit"
+
+
+                android:inputType="textMultiLine"
+
+
+                android:layout_marginTop="12dp"/>
+
+
+
+
         </LinearLayout>
 
-        <Button
-            android:id="@+id/generateZipBtn"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:text="生成 ZIP 并保存" />
-    </LinearLayout>
 
-    <!-- ========= 文件夹模式区域 ========= -->
-    <LinearLayout
-        android:id="@+id/pathModeLayout"
+    </com.google.android.material.card.MaterialCardView>
+
+
+
+
+
+    <com.google.android.material.button.MaterialButton
+
+
+
+
+        android:id="@+id/btnGenerate"
+
+
         android:layout_width="match_parent"
+
+        android:layout_height="52dp"
+
+
+        android:text="生成结构"
+
+
+        android:textSize="16sp"
+
+
+        android:backgroundTint="@color/primary"
+
+
+        app:cornerRadius="16dp"
+
+        android:layout_marginBottom="14dp"/>
+
+
+
+
+
+    <com.google.android.material.card.MaterialCardView
+
+
+
+
+        android:layout_width="match_parent"
+
         android:layout_height="0dp"
+
+
         android:layout_weight="1"
-        android:orientation="vertical"
-        android:visibility="gone">
 
-        <EditText
-            android:id="@+id/inputPath"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:hint="输入文件夹路径，如 /storage/emulated/0/压缩/"
-            android:inputType="textUri"
-            android:singleLine="true"
-            android:background="?attr/colorSurface"
-            android:textColor="?attr/colorOnSurface"
-            android:padding="8dp" />
 
-        <Button
-            android:id="@+id/generateTreeBtn"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:text="生成文件树" />
+        app:cardCornerRadius="18dp"
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="生成的文件树："
-            android:textSize="14sp"
-            android:layout_marginTop="12dp"
-            android:layout_marginBottom="4dp"
-            android:textColor="?android:textColorPrimary" />
+        app:cardElevation="4dp">
+
+
 
         <ScrollView
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1">
 
-            <!-- 优化后的输出框 -->
+
+
+
+            android:layout_width="match_parent"
+
+            android:layout_height="match_parent">
+
+
             <TextView
-                android:id="@+id/treeOutput"
+
+
+
+
+                android:id="@+id/textResult"
+
+
                 android:layout_width="match_parent"
+
                 android:layout_height="wrap_content"
-                android:fontFamily="monospace"
-                android:textSize="13sp"
-                android:padding="8dp"
-                android:background="?attr/colorSurface"
-                android:textColor="?attr/colorOnSurface"
-                android:textIsSelectable="true"
-                android:text="" />
+
+
+                android:padding="18dp"
+
+
+                android:textSize="14sp"
+
+                android:textColor="@color/textPrimary"
+
+                android:typeface="monospace"
+
+                android:text="等待生成..." />
+
+
         </ScrollView>
 
-        <Button
-            android:id="@+id/copyBtn"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="复制到剪贴板" />
-    </LinearLayout>
+
+
+    </com.google.android.material.card.MaterialCardView>
+
+
+
+
+    <com.google.android.material.button.MaterialButton
+
+
+
+
+        android:id="@+id/btnCopy"
+
+
+        android:layout_width="match_parent"
+
+        android:layout_height="52dp"
+
+
+        android:text="复制结果"
+
+
+        android:textSize="16sp"
+
+
+        android:layout_marginTop="14dp"
+
+
+        android:backgroundTint="@color/secondary"
+
+        app:cornerRadius="16dp"/>
+
+
+
+
 </LinearLayout>

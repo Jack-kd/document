@@ -1,5 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
 
-<!-- 文件位置：document/app/src/main/res/values/strings.xml -->
 <resources>
-    <string name="app_name">文件树构建</string>
+
+
+    <string name="app_name">
+        File Tree Studio
+    </string>
+
+
 </resources>
