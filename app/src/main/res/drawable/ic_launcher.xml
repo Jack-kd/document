@@ -1,0 +1,62 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+
+    <!-- 背景 -->
+    <path
+        android:fillColor="#101114"
+        android:pathData="
+        M54,4
+        A50,50 0,1 1,54,104
+        A50,50 0,1 1,54,4"/>
+
+
+    <!-- 文件树主体 -->
+    <path
+        android:fillColor="#4DA3FF"
+        android:pathData="
+        M28,34
+        L48,34
+        L56,43
+        L80,43
+        L80,72
+        L28,72
+        Z"/>
+
+
+    <!-- 树结构线 -->
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="4"
+        android:strokeLineCap="round"
+        android:fillColor="@android:color/transparent"
+        android:pathData="
+        M43,52
+        L43,67
+        M43,58
+        L64,58
+        M64,58
+        L64,67"/>
+
+
+    <!-- 节点 -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="
+        M39,67
+        A4,4 0,1 1,47,67
+        A4,4 0,1 1,39,67"/>
+
+
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="
+        M60,67
+        A4,4 0,1 1,68,67
+        A4,4 0,1 1,60,67"/>
+
+
+</vector>
