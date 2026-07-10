@@ -5,7 +5,6 @@ package com.example.doctree
 import android.os.Bundle
 import android.widget.EditText
 import android.widget.TextView
-import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.example.doctree.ui.MainViewModel
@@ -20,8 +19,7 @@ class MainActivity:
 
 
 
-    private val viewModel:
-            MainViewModel by viewModels()
+    private lateinit var viewModel: MainViewModel
 
 
 
@@ -31,6 +29,12 @@ class MainActivity:
         super.onCreate(
             savedInstanceState
         )
+
+
+        viewModel =
+            androidx.lifecycle.ViewModelProvider(
+                this
+            )[MainViewModel::class.java]
 
 
         setContentView(
