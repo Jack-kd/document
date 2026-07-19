@@ -386,7 +386,161 @@ chmod +x gradlew
 
 ---
 
-## 9. 已知问题与注意事项
+## 9. 功能详细分析
+
+### 9.1 启动与页面初始化
+
+1. **应用入口**：`AndroidManifest.xml` 将 `MainActivity` 声明为 `MAIN` / `LAUNCHER`，启动后直接进入单页面。
+2. **ViewModel 创建**：`MainActivity.onCreate` 中通过 `ViewModelProvider(this)[MainViewModel::class.java]` 获取实例，遵循 Activity 作用域，配置变更时状态保留。
+3. **布局加载**：`setContentView(R.layout.activity_main)`，页面采用垂直 `LinearLayout`，无 ActionBar。
+4. **控件绑定**：
+   - `editTree`：多行输入框，`inputType="textMultiLine"`，最大可见高度 150dp，顶部对齐。
+   - `textResult`：等宽字体 `TextView`，嵌套在 `ScrollView` 中，用于展示结果。
+   - `btnGenerate` / `btnCopy`：圆角 Material 按钮。
+5. **状态订阅**：`lifecycleScope.launch { viewModel.state.collect { ... } }` 在 Activity 生命周期内持续收集 `StateFlow`。只要 `UiState.treeText` 变化，结果区立即刷新；为空时回退显示 `"等待生成..."`。
+
+### 9.2 “生成结构”按钮的实际行为
+
+**当前实现**：
+
+```kotlin
+btnGenerate.setOnClickListener {
+    val text = input.text.toString()
+    if (text.isNotBlank()) {
+        viewModel.updateText(text)
+    }
+}
+```
+
+- 仅校验输入是否非空（`isNotBlank()` 会过滤仅包含空格的输入）。
+- 调用的是 `MainViewModel.updateText(text)`，**没有把输入当作目录结构去解析**。
+- 因此结果区显示的是用户输入的原文，而非格式化后的文件树。
+
+**与 UI 文案的落差**：输入框 hint 示例为 `app/\n ├── src/\n └── build.gradle`，暗示应用会解析并重新生成树；实际只是回显。
+
+### 9.3 “复制结果”按钮的行为
+
+```kotlin
+btnCopy.setOnClickListener {
+    ClipboardUtils.copy(this, output.text.toString())
+}
+```
+
+- 复制当前结果区文本，包括默认提示 `"等待生成..."`。
+- 使用系统 `ClipboardManager`，剪贴板标签为 `"tree"`。
+- 无 Toast 或 Snackbar 反馈，用户无法直接感知复制是否成功。
+
+### 9.4 `MainViewModel` 状态机
+
+`UiState` 初始值：
+
+```kotlin
+UiState(loading = false, treeText = "", message = "", mode = 0)
+```
+
+**状态转换表**：
+
+| 触发条件 | 调用函数 | 状态变化 | 结果区表现 |
+| --- | --- | --- | --- |
+| 点击生成按钮 | `updateText(text)` | `treeText = text` | 显示原文 |
+| 点击复制按钮 | 不经过 ViewModel | 无 | 显示不变 |
+| 调用 `generate(folder)` | `generate(folder)` | 先 `loading=true`，再 `treeText=result, message="生成完成"` | 显示生成的文件树 |
+| 调用 `clear()` | `clear()` | 重置为初始状态 | 显示 `"等待生成..."` |
+
+> `loading` 与 `message` 当前仅在 `generate()` 路径中被更新，但 UI 没有消费这两个字段（无进度条、无 Toast）。
+
+### 9.5 `TreeParser.normalize` 详细行为
+
+**输入处理流程**：
+
+1. `text.lines()` 按 `\n`、`\r\n` 或 `\r` 拆分为行。
+2. `filter { it.isNotBlank() }` 过滤掉空行或仅空白行。
+3. 对每一行执行：
+   - `it.trim()` 去除首尾空白。
+   - 移除子串 `"├──"`、`"└──"`、`"│"`。
+   - 再次 `trim()`。
+4. 若结果非空，加入返回列表。
+
+**示例**：
+
+| 输入行 | 输出 |
+| --- | --- |
+| `app/` | `app/` |
+| `├── src/` | `src/` |
+| `└── build.gradle` | `build.gradle` |
+| `│   MainActivity.kt` | `MainActivity.kt` |
+| `   ` | （过滤） |
+
+**能力边界**：
+
+- 只能做“清洗”，无法恢复层级关系；它不知道某一行属于第几级目录。
+- 如果目录名本身包含 `│`、`├──`、`└──` 字符，会被误删。
+- 不会处理缩进空格/制表符与层级之间的映射。
+
+### 9.6 `FileTreeGenerator.generate` 详细行为
+
+**算法**：深度优先递归（DFS），按名称字母顺序遍历。
+
+**输出规则**：
+
+- 每个节点占一行：`prefix + name + （目录则 "/"） + "\n"`。
+- 子节点遍历前按 `it.name` 排序。
+- 前缀规则：
+  - 若当前节点是父目录最后一个子节点，后续行前缀追加 4 个空格。
+  - 否则后续行前缀追加 `│   `（竖线 + 3 个空格）。
+
+**示例输出**（对某目录结构）：
+
+```
+app/
+├── build.gradle.kts
+└── src/
+    ├── main/
+    │   ├── AndroidManifest.xml
+    │   ├── java/
+    │   └── res/
+    └── test/
+        └── java/
+```
+
+**边界情况**：
+
+- 空目录：只输出目录名 + `/`。
+- 文件：`listFiles()` 返回 `null`，不追加子节点。
+- 无读取权限的目录：`listFiles()` 可能返回 `null`，生成结果可能不完整。
+- 循环引用/符号链接：未做防循环处理，可能死循环或栈溢出。
+
+### 9.7 `ZipCreator.create` 详细行为
+
+**算法**：递归遍历源文件夹，为每个文件创建 `ZipEntry`。
+
+**路径规则**：`path` 参数初始为 `source.name`，递归时拼接为 `$path/${it.name}`。
+
+**示例**：源目录 `Documents` 下文件 `a.txt` 在 ZIP 中的路径为 `Documents/a.txt`。
+
+**边界情况**：
+
+- 空目录：不会为该目录本身创建 `ZipEntry`，仅递归其子项；若目录为空，生成的 ZIP 可能不包含该目录条目。
+- 大文件：`copyTo` 一次性拷贝，未分块或显示进度。
+- 无写入权限：抛出 `FileNotFoundException` 或 `SecurityException`，外层未捕获。
+- 同名目标文件：直接覆盖。
+
+### 9.8 当前功能完整度评估
+
+| 功能点 | 是否可用 | 完成度 | 说明 |
+| --- | --- | --- | --- |
+| 文本输入与展示 | 是 | 100% | 输入框、结果区、滚动均正常。 |
+| “生成结构”按钮 | 是 | 30% | 仅做非空校验与原文回显，未实现文件树生成。 |
+| “复制结果”按钮 | 是 | 70% | 可复制文本，但缺少成功反馈。 |
+| 输入文本解析 | 代码存在 | 40% | `TreeParser.normalize` 已就绪，但未接入流程。 |
+| 本地文件树生成 | 代码存在 | 80% | `FileTreeGenerator` 功能完整，但未接入 UI。 |
+| ZIP 压缩 | 代码存在 | 20% | `ZipCreator` 已就绪，但无任何入口。 |
+| 加载状态反馈 | 否 | 0% | `loading` 字段未在 UI 中体现。 |
+| 错误处理 | 弱 | 10% | 无权限、空输入、IO 异常等场景均未处理。 |
+
+---
+
+## 10. 已知问题与注意事项
 
 1. **生成逻辑未真正调用**  
    当前 `btnGenerate` 仅把用户输入原样回显到结果区，没有调用 `TreeParser` 或 `FileTreeGenerator`。若需实现真正的文件树生成，需要修改 `MainActivity` 或 `MainViewModel`，将输入文本解析并转换为文件系统结构，或调整 `FileTreeGenerator` 以接收文本输入。
@@ -403,9 +557,15 @@ chmod +x gradlew
 5. **输入提示与真实行为不一致**  
    输入框 hint 示例为目录结构文本，但当前逻辑并不会将其解析为树形结构。
 
+6. **复制按钮缺少反馈**  
+   复制后无 Toast/Snackbar，用户难以确认操作结果。
+
+7. **异常与权限处理缺失**  
+   文件 IO、存储权限、剪贴板操作均未加 try-catch 或权限申请。
+
 ---
 
-## 10. 扩展建议
+## 11. 扩展建议
 
 - 在 `MainActivity` 中接入 `TreeParser`，将用户输入的目录结构文本解析为树形节点，再调用新的渲染逻辑生成 ASCII 树。
 - 若保持“本地文件夹生成树”的路线，可接入 Storage Access Framework（SAF）让用户选择目录，然后调用 `MainViewModel.generate(folder)`。
