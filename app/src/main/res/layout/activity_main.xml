@@ -1,264 +1,409 @@
 <?xml version="1.0" encoding="utf-8"?>
-
-<LinearLayout
+<ScrollView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
 
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/background"
+    android:fillViewport="true"
+    android:scrollbars="none">
 
-    android:orientation="vertical"
-
-    android:padding="20dp"
-
-    android:background="@color/background">
-
-
-    <TextView
-
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-
-        android:text="File Tree Studio"
-
-        android:textSize="26sp"
-
-        android:textStyle="bold"
-
-        android:textColor="@color/textPrimary"
-
-        android:layout_marginBottom="6dp"/>
-
-
-
-    <TextView
-
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-
-        android:text="智能生成项目结构"
-
-        android:textSize="14sp"
-
-        android:textColor="@color/textSecondary"
-
-        android:layout_marginBottom="20dp"/>
-
-
-
-
-    <com.google.android.material.card.MaterialCardView
-
-
-
-
+    <LinearLayout
         android:layout_width="match_parent"
-
         android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp"
+        android:paddingBottom="32dp">
 
-
-        app:cardCornerRadius="18dp"
-
-        app:cardElevation="4dp"
-
-
-        android:layout_marginBottom="16dp">
-
-
+        <!-- ======== Header ======== -->
         <LinearLayout
-
-
-
-
             android:layout_width="match_parent"
-
             android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="6dp">
 
-
-            android:padding="16dp"
-
-
-            android:orientation="vertical">
-
-
-
-
-            <TextView
-
-                android:layout_width="wrap_content"
-
+            <LinearLayout
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
 
-                android:text="输入目录结构"
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="File Tree Studio"
+                    android:textSize="26sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/textPrimary"
+                    android:letterSpacing="-0.02" />
 
-                android:textStyle="bold"
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="智能生成项目结构"
+                    android:textSize="13sp"
+                    android:textColor="@color/textSecondary"
+                    android:layout_marginTop="3dp" />
+            </LinearLayout>
 
-                android:textSize="16sp"/>
+            <!-- Source badge -->
+            <LinearLayout
+                android:id="@+id/sourceBadge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_source_tag"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingHorizontal="12dp"
+                android:paddingVertical="6dp">
 
+                <View
+                    android:layout_width="8dp"
+                    android:layout_height="8dp"
+                    android:background="@drawable/bg_source_tag_dot"
+                    android:layout_marginEnd="6dp" />
 
-
-
-            <EditText
-
-
-
-
-                android:id="@+id/editTree"
-
-
-                android:layout_width="match_parent"
-
-                android:layout_height="150dp"
-
-
-                android:gravity="top"
-
-                android:padding="12dp"
-
-
-                android:hint="例如：\napp/\n ├── src/\n └── build.gradle"
-
-
-                android:background="@drawable/bg_edit"
-
-
-                android:inputType="textMultiLine"
-
-
-                android:layout_marginTop="12dp"/>
-
-
-
-
+                <TextView
+                    android:id="@+id/sourceText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="ChatGPT"
+                    android:textSize="12sp"
+                    android:textColor="@color/success" />
+            </LinearLayout>
         </LinearLayout>
 
-
-    </com.google.android.material.card.MaterialCardView>
-
-
-
-
-
-    <com.google.android.material.button.MaterialButton
-
-
-
-
-        android:id="@+id/btnGenerate"
-
-
-        android:layout_width="match_parent"
-
-        android:layout_height="52dp"
-
-
-        android:text="生成结构"
-
-
-        android:textSize="16sp"
-
-
-        android:backgroundTint="@color/primary"
-
-
-        app:cornerRadius="16dp"
-
-        android:layout_marginBottom="14dp"/>
-
-
-
-
-
-    <com.google.android.material.card.MaterialCardView
-
-
-
-
-        android:layout_width="match_parent"
-
-        android:layout_height="0dp"
-
-
-        android:layout_weight="1"
-
-
-        app:cardCornerRadius="18dp"
-
-        app:cardElevation="4dp">
-
-
-
-        <ScrollView
-
-
-
-
+        <View
             android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/divider"
+            android:layout_marginBottom="18dp" />
 
-            android:layout_height="match_parent">
-
+        <!-- ======== Mode Tabs ======== -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:layout_marginBottom="14dp"
+            android:background="@drawable/bg_folder_card"
+            android:padding="4dp">
 
             <TextView
-
-
-
-
-                android:id="@+id/textResult"
-
-
-                android:layout_width="match_parent"
-
-                android:layout_height="wrap_content"
-
-
-                android:padding="18dp"
-
-
+                android:id="@+id/tabTextMode"
+                android:layout_width="0dp"
+                android:layout_height="42dp"
+                android:layout_weight="1"
+                android:text="文本模式"
                 android:textSize="14sp"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:textColor="@color/onPrimary"
+                android:background="@drawable/bg_tab_active"
+                android:clickable="true"
+                android:focusable="true" />
 
+            <TextView
+                android:id="@+id/tabFolderMode"
+                android:layout_width="0dp"
+                android:layout_height="42dp"
+                android:layout_weight="1"
+                android:text="文件夹模式"
+                android:textSize="14sp"
+                android:gravity="center"
+                android:textColor="@color/textTertiary"
+                android:background="@drawable/bg_tab_inactive"
+                android:clickable="true"
+                android:focusable="true" />
+        </LinearLayout>
+
+        <!-- ======== AI Source Selector ======== -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="14dp"
+            android:paddingHorizontal="4dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="来源"
+                android:textSize="14sp"
+                android:textStyle="bold"
                 android:textColor="@color/textPrimary"
+                android:layout_marginEnd="12dp" />
 
-                android:typeface="monospace"
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="38dp"
+                android:layout_weight="1"
+                android:orientation="horizontal"
+                android:background="@drawable/bg_folder_card"
+                android:padding="3dp">
 
-                android:text="等待生成..." />
+                <TextView
+                    android:id="@+id/tabChatGPT"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:text="ChatGPT"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:gravity="center"
+                    android:textColor="@color/onPrimary"
+                    android:background="@drawable/bg_tab_active"
+                    android:clickable="true"
+                    android:focusable="true" />
 
+                <TextView
+                    android:id="@+id/tabDeepSeek"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:text="DeepSeek"
+                    android:textSize="13sp"
+                    android:gravity="center"
+                    android:textColor="@color/textTertiary"
+                    android:background="@drawable/bg_tab_inactive"
+                    android:clickable="true"
+                    android:focusable="true" />
+            </LinearLayout>
+        </LinearLayout>
 
-        </ScrollView>
+        <!-- ======== Text Mode Input Card ======== -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cardTextInput"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="2dp"
+            app:cardBackgroundColor="@color/cardBackground"
+            app:strokeWidth="0.5dp"
+            app:strokeColor="@color/cardStroke"
+            android:layout_marginBottom="14dp">
 
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
 
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="输入目录结构"
+                    android:textStyle="bold"
+                    android:textSize="15sp"
+                    android:textColor="@color/textPrimary"
+                    android:layout_marginBottom="10dp" />
 
-    </com.google.android.material.card.MaterialCardView>
+                <EditText
+                    android:id="@+id/editTree"
+                    android:layout_width="match_parent"
+                    android:layout_height="160dp"
+                    android:gravity="top|start"
+                    android:padding="14dp"
+                    android:hint="例如：\napp/\n ├── src/\n │   ├── main/\n │   └── test/\n └── build.gradle"
+                    android:background="@drawable/bg_edit"
+                    android:inputType="textMultiLine"
+                    android:textSize="14sp"
+                    android:textColor="@color/textPrimary"
+                    android:textColorHint="@color/textTertiary"
+                    android:typeface="monospace" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
 
+        <!-- ======== Folder Mode Card ======== -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cardFolderInput"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="2dp"
+            app:cardBackgroundColor="@color/cardBackground"
+            app:strokeWidth="0.5dp"
+            app:strokeColor="@color/cardStroke"
+            android:layout_marginBottom="14dp"
+            android:visibility="gone">
 
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
 
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="选择文件夹"
+                    android:textStyle="bold"
+                    android:textSize="15sp"
+                    android:textColor="@color/textPrimary"
+                    android:layout_marginBottom="10dp" />
 
-    <com.google.android.material.button.MaterialButton
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:background="@drawable/bg_folder_card"
+                    android:padding="14dp">
 
+                    <View
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:background="@drawable/bg_button_outline"
+                        android:layout_marginEnd="12dp" />
 
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
 
+                        <TextView
+                            android:id="@+id/folderName"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="未选择文件夹"
+                            android:textSize="13sp"
+                            android:textColor="@color/textSecondary"
+                            android:maxLines="1"
+                            android:ellipsize="end" />
 
-        android:id="@+id/btnCopy"
+                        <TextView
+                            android:id="@+id/folderPath"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text=""
+                            android:textSize="11sp"
+                            android:textColor="@color/textTertiary"
+                            android:maxLines="1"
+                            android:ellipsize="middle"
+                            android:visibility="gone" />
+                    </LinearLayout>
 
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnSelectFolder"
+                        android:layout_width="wrap_content"
+                        android:layout_height="40dp"
+                        android:text="选择文件夹"
+                        android:textSize="13sp"
+                        app:cornerRadius="12dp"
+                        android:backgroundTint="@color/primary"
+                        android:paddingHorizontal="16dp" />
+                </LinearLayout>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
 
-        android:layout_width="match_parent"
+        <!-- ======== Generate Button ======== -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnGenerate"
+            android:layout_width="match_parent"
+            android:layout_height="54dp"
+            android:text="生成结构"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="@color/onPrimary"
+            android:backgroundTint="@color/primary"
+            app:cornerRadius="16dp"
+            android:layout_marginBottom="16dp"
+            app:icon="@drawable/ic_play"
+            app:iconGravity="textStart"
+            app:iconPadding="8dp" />
 
-        android:layout_height="52dp"
+        <!-- ======== Result Card ======== -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:minHeight="180dp"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="2dp"
+            app:cardBackgroundColor="@color/cardBackground"
+            app:strokeWidth="0.5dp"
+            app:strokeColor="@color/cardStroke">
 
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical">
 
-        android:text="复制结果"
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:paddingHorizontal="18dp"
+                    android:paddingTop="14dp"
+                    android:paddingBottom="8dp">
 
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="生成结果"
+                        android:textStyle="bold"
+                        android:textSize="15sp"
+                        android:textColor="@color/textPrimary" />
 
-        android:textSize="16sp"
+                    <TextView
+                        android:id="@+id/sourceLabel"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="来源: ChatGPT"
+                        android:textSize="11sp"
+                        android:textColor="@color/textTertiary"
+                        android:background="@drawable/bg_source_tag"
+                        android:paddingHorizontal="8dp"
+                        android:paddingVertical="3dp" />
+                </LinearLayout>
 
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="0.5dp"
+                    android:background="@color/divider"
+                    android:layout_marginHorizontal="18dp" />
 
-        android:layout_marginTop="14dp"
+                <ScrollView
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:scrollbars="vertical">
 
+                    <TextView
+                        android:id="@+id/textResult"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:padding="18dp"
+                        android:textSize="13sp"
+                        android:textColor="@color/textPrimary"
+                        android:typeface="monospace"
+                        android:lineSpacingExtra="3dp"
+                        android:text="等待生成…" />
+                </ScrollView>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
 
-        android:backgroundTint="@color/secondary"
+        <!-- ======== Copy Button ======== -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnCopy"
+            android:layout_width="match_parent"
+            android:layout_height="54dp"
+            android:text="复制结果"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="@color/onPrimary"
+            android:layout_marginTop="14dp"
+            android:backgroundTint="@color/secondary"
+            app:cornerRadius="16dp"
+            app:icon="@drawable/ic_copy"
+            app:iconGravity="textStart"
+            app:iconPadding="8dp" />
 
-        app:cornerRadius="16dp"/>
-
-
-
-
-</LinearLayout>
+    </LinearLayout>
+</ScrollView>

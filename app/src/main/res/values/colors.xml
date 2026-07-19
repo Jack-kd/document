@@ -1,46 +1,49 @@
 <?xml version="1.0" encoding="utf-8"?>
-
 <resources>
+    <!-- Primary palette -->
+    <color name="primary">#6750A4</color>
+    <color name="primaryLight">#EADDFF</color>
+    <color name="primaryVariant">#4F378B</color>
+    <color name="onPrimary">#FFFFFF</color>
 
+    <!-- Secondary -->
+    <color name="secondary">#625B71</color>
+    <color name="secondaryLight">#E8DEF8</color>
 
-    <color name="primary">
-        #6750A4
-    </color>
+    <!-- Background & Surface -->
+    <color name="background">#FEF7FF</color>
+    <color name="surface">#FFFBFE</color>
+    <color name="surfaceVariant">#E7E0EC</color>
 
+    <!-- Card -->
+    <color name="cardBackground">#FFFFFF</color>
+    <color name="cardStroke">#E0E0E0</color>
 
-    <color name="secondary">
-        #625B71
-    </color>
+    <!-- Edit -->
+    <color name="editBackground">#F1EFF5</color>
+    <color name="border">#CAC4D0</color>
 
+    <!-- Text -->
+    <color name="textPrimary">#1C1B1F</color>
+    <color name="textSecondary">#66636B</color>
+    <color name="textTertiary">#99969E</color>
 
-    <color name="background">
-        #F8F7FC
-    </color>
+    <!-- Accent colors for mode tabs -->
+    <color name="tabActive">#6750A4</color>
+    <color name="tabInactive">#99969E</color>
+    <color name="tabActiveBg">#EADDFF</color>
 
+    <!-- Status colors -->
+    <color name="success">#1B8A3D</color>
+    <color name="successBg">#D4F5DD</color>
 
-    <color name="cardBackground">
-        #FFFFFF
-    </color>
+    <!-- Divider -->
+    <color name="divider">#E0E0E0</color>
 
+    <!-- Gradient -->
+    <color name="gradientStart">#6750A4</color>
+    <color name="gradientEnd">#9C7CF4</color>
 
-    <color name="editBackground">
-        #F1EFF5
-    </color>
-
-
-    <color name="border">
-        #DDD8E7
-    </color>
-
-
-    <color name="textPrimary">
-        #1C1B1F
-    </color>
-
-
-    <color name="textSecondary">
-        #66636B
-    </color>
-
-
+    <!-- Shadow -->
+    <color name="shadow">#1A000000</color>
 </resources>
