@@ -2,45 +2,63 @@
 
 <resources>
 
-
+    <!-- 主色板 -->
     <color name="primary">
         #6750A4
     </color>
 
+    <color name="onPrimary">
+        #FFFFFF
+    </color>
+
+    <color name="primaryContainer">
+        #EADDFF
+    </color>
 
     <color name="secondary">
         #625B71
     </color>
 
+    <color name="onSecondary">
+        #FFFFFF
+    </color>
 
+    <!-- 背景与表面 -->
     <color name="background">
         #F8F7FC
     </color>
-
 
     <color name="cardBackground">
         #FFFFFF
     </color>
 
-
     <color name="editBackground">
         #F1EFF5
     </color>
 
+    <color name="resultBackground">
+        #FAFAFA
+    </color>
 
     <color name="border">
         #DDD8E7
     </color>
 
-
+    <!-- 文本 -->
     <color name="textPrimary">
         #1C1B1F
     </color>
-
 
     <color name="textSecondary">
         #66636B
     </color>
 
+    <color name="textHint">
+        #9E9AA3
+    </color>
+
+    <color name="textDisabled">
+        #BFBDC2
+    </color>
 
 </resources>
