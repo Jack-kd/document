@@ -2,10 +2,40 @@
 
 <resources>
 
-
     <string name="app_name">
         File Tree Studio
     </string>
 
+    <string name="app_subtitle">
+        智能生成项目结构
+    </string>
+
+    <string name="label_input">
+        输入目录结构
+    </string>
+
+    <string name="hint_input_description">
+        在下方粘贴或输入项目目录结构，点击生成按钮即可获得格式化文件树。
+    </string>
+
+    <string name="hint_tree_input">
+        例如：\napp/\n├── src/\n│   ├── main/\n│   └── test/\n└── build.gradle
+    </string>
+
+    <string name="label_output">
+        生成结果
+    </string>
+
+    <string name="status_waiting">
+        等待生成…
+    </string>
+
+    <string name="action_generate">
+        生成结构
+    </string>
+
+    <string name="action_copy">
+        复制结果
+    </string>
 
 </resources>
