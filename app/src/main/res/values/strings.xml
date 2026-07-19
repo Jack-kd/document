@@ -1,11 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
-
 <resources>
-
-
-    <string name="app_name">
-        File Tree Studio
-    </string>
-
-
+    <string name="app_name">File Tree Studio</string>
+    <string name="subtitle">智能生成项目结构</string>
+    <string name="tab_text_mode">文本模式</string>
+    <string name="tab_folder_mode">文件夹模式</string>
+    <string name="input_hint">例如：\napp/\n ├── src/\n │   ├── main/\n │   └── test/\n └── build.gradle</string>
+    <string name="btn_generate">生成结构</string>
+    <string name="btn_copy">复制结果</string>
+    <string name="btn_select_folder">选择文件夹</string>
+    <string name="btn_clear">清空</string>
+    <string name="result_waiting">等待生成…</string>
+    <string name="source_label">来源</string>
+    <string name="source_text_mode">手动输入</string>
+    <string name="source_folder_mode">本地文件夹</string>
+    <string name="label_input">输入目录结构</string>
+    <string name="label_output">生成结果</string>
+    <string name="label_folder">选择文件夹</string>
+    <string name="copied">已复制到剪贴板</string>
+    <string name="no_folder_selected">未选择文件夹</string>
 </resources>
