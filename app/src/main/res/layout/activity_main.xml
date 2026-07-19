@@ -5,61 +5,52 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="16dp"
+    android:padding="20dp"
     android:background="@color/background">
 
-    <!-- Header -->
-    <LinearLayout
-        android:layout_width="match_parent"
+    <TextView
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:layout_marginBottom="16dp"
-        android:layout_marginTop="4dp">
+        android:text="File Tree Studio"
+        android:textSize="26sp"
+        android:textStyle="bold"
+        android:textColor="@color/textPrimary"
+        android:layout_marginBottom="6dp"/>
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="File Tree Studio"
-            android:textSize="26sp"
-            android:textStyle="bold"
-            android:textColor="@color/textPrimary"/>
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="智能生成项目结构"
+        android:textSize="14sp"
+        android:textColor="@color/textSecondary"
+        android:layout_marginBottom="20dp"/>
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="智能生成项目结构"
-            android:textSize="13sp"
-            android:textColor="@color/textSecondary"
-            android:layout_marginTop="2dp"/>
-    </LinearLayout>
-
-    <!-- Input Card -->
     <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:cardCornerRadius="16dp"
         app:cardElevation="2dp"
-        android:layout_marginBottom="14dp">
+        app:cardBackgroundColor="@color/cardBackground"
+        android:layout_marginBottom="16dp">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="14dp">
+            android:padding="16dp"
+            android:orientation="vertical">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="输入目录结构"
                 android:textStyle="bold"
-                android:textSize="15sp"
-                android:textColor="@color/textPrimary"
-                android:layout_marginBottom="10dp"/>
+                android:textSize="16sp"
+                android:textColor="@color/textPrimary"/>
 
             <EditText
                 android:id="@+id/editTree"
                 android:layout_width="match_parent"
-                android:layout_height="140dp"
+                android:layout_height="150dp"
                 android:gravity="top"
                 android:padding="12dp"
                 android:hint="例如：\napp/\n ├── src/\n └── build.gradle"
@@ -67,93 +58,58 @@
                 android:inputType="textMultiLine"
                 android:textColor="@color/textPrimary"
                 android:textColorHint="@color/textSecondary"
-                android:layout_marginBottom="12dp"/>
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnGenerate"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:text="生成结构"
-                android:textSize="15sp"
-                android:textStyle="bold"
-                android:backgroundTint="@color/primary"
-                app:cornerRadius="14dp"
-                android:letterSpacing="0.03"/>
+                android:layout_marginTop="12dp"/>
 
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 
-    <!-- Result Card -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnGenerate"
+        android:layout_width="match_parent"
+        android:layout_height="52dp"
+        android:text="生成结构"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:backgroundTint="@color/primary"
+        app:cornerRadius="14dp"
+        android:layout_marginBottom="14dp"
+        android:letterSpacing="0.03"/>
+
     <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
         app:cardCornerRadius="16dp"
-        app:cardElevation="2dp">
+        app:cardElevation="2dp"
+        app:cardBackgroundColor="@color/cardBackground">
 
-        <LinearLayout
+        <ScrollView
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="vertical">
+            android:layout_height="match_parent">
 
-            <!-- Result Header -->
-            <LinearLayout
+            <TextView
+                android:id="@+id/textResult"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:paddingStart="14dp"
-                android:paddingEnd="8dp"
-                android:paddingTop="12dp"
-                android:paddingBottom="8dp">
+                android:padding="18dp"
+                android:textSize="14sp"
+                android:textColor="@color/textPrimary"
+                android:typeface="monospace"
+                android:text="等待生成..." />
 
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="生成结果"
-                    android:textStyle="bold"
-                    android:textSize="15sp"
-                    android:textColor="@color/textPrimary"/>
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnCopy"
-                    android:layout_width="wrap_content"
-                    android:layout_height="36dp"
-                    android:text="复制"
-                    android:textSize="13sp"
-                    android:backgroundTint="@color/secondary"
-                    app:cornerRadius="10dp"
-                    android:paddingStart="14dp"
-                    android:paddingEnd="14dp"
-                    android:insetTop="0dp"
-                    android:insetBottom="0dp"
-                    android:letterSpacing="0.02"/>
-
-            </LinearLayout>
-
-            <ScrollView
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:paddingStart="14dp"
-                android:paddingEnd="14dp"
-                android:paddingBottom="14dp">
-
-                <TextView
-                    android:id="@+id/textResult"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:padding="12dp"
-                    android:textSize="13sp"
-                    android:textColor="@color/textPrimary"
-                    android:typeface="monospace"
-                    android:background="@drawable/bg_edit"
-                    android:text="等待生成..."
-                    android:gravity="top"/>
-
-            </ScrollView>
-
-        </LinearLayout>
+        </ScrollView>
     </com.google.android.material.card.MaterialCardView>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnCopy"
+        android:layout_width="match_parent"
+        android:layout_height="52dp"
+        android:text="复制结果"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:layout_marginTop="14dp"
+        android:backgroundTint="@color/secondary"
+        app:cornerRadius="14dp"
+        android:letterSpacing="0.03"/>
 
 </LinearLayout>

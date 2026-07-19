@@ -1,62 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
 
-
-    <!-- 背景 -->
+    <!-- Background circle -->
     <path
-        android:fillColor="#101114"
-        android:pathData="
-        M54,4
-        A50,50 0,1 1,54,104
-        A50,50 0,1 1,54,4"/>
+        android:fillColor="#6750A4"
+        android:pathData="M54,4 A50,50 0,1 1,54,104 A50,50 0,1 1,54,4" />
 
-
-    <!-- 文件树主体 -->
+    <!-- Folder body -->
     <path
-        android:fillColor="#4DA3FF"
-        android:pathData="
-        M28,34
-        L48,34
-        L56,43
-        L80,43
-        L80,72
-        L28,72
-        Z"/>
+        android:fillColor="#FFFFFF"
+        android:pathData="M30,36 L42,36 L48,42 L78,42 L78,72 L30,72 Z" />
 
-
-    <!-- 树结构线 -->
+    <!-- Folder tab -->
     <path
-        android:strokeColor="#FFFFFF"
-        android:strokeWidth="4"
+        android:fillColor="#E8DEF8"
+        android:pathData="M30,36 L42,36 L48,42 L30,42 Z" />
+
+    <!-- Tree vertical line -->
+    <path
+        android:strokeColor="#6750A4"
+        android:strokeWidth="2.5"
         android:strokeLineCap="round"
         android:fillColor="@android:color/transparent"
-        android:pathData="
-        M43,52
-        L43,67
-        M43,58
-        L64,58
-        M64,58
-        L64,67"/>
+        android:pathData="M44,52 L44,66" />
 
-
-    <!-- 节点 -->
+    <!-- Tree horizontal line -->
     <path
-        android:fillColor="#FFFFFF"
-        android:pathData="
-        M39,67
-        A4,4 0,1 1,47,67
-        A4,4 0,1 1,39,67"/>
+        android:strokeColor="#6750A4"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round"
+        android:fillColor="@android:color/transparent"
+        android:pathData="M44,56 L62,56" />
 
-
+    <!-- Tree vertical sub-line -->
     <path
-        android:fillColor="#FFFFFF"
-        android:pathData="
-        M60,67
-        A4,4 0,1 1,68,67
-        A4,4 0,1 1,60,67"/>
+        android:strokeColor="#6750A4"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round"
+        android:fillColor="@android:color/transparent"
+        android:pathData="M54,56 L54,66" />
 
+    <!-- Tree horizontal sub-line -->
+    <path
+        android:strokeColor="#6750A4"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round"
+        android:fillColor="@android:color/transparent"
+        android:pathData="M54,60 L68,60" />
 
+    <!-- Node dots -->
+    <path
+        android:fillColor="#FFD54F"
+        android:pathData="M41,64 A3,3 0,1 1,47,64 A3,3 0,1 1,41,64" />
+    <path
+        android:fillColor="#FFD54F"
+        android:pathData="M51,64 A3,3 0,1 1,57,64 A3,3 0,1 1,51,64" />
+    <path
+        android:fillColor="#FFD54F"
+        android:pathData="M65,64 A3,3 0,1 1,71,64 A3,3 0,1 1,65,64" />
 </vector>
