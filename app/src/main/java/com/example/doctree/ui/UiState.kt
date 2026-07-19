@@ -6,5 +6,6 @@ data class UiState(
     val message: String = "",
     val mode: Int = 0,           // 0 = text mode, 1 = folder mode
     val folderPath: String = "",  // selected folder path
-    val folderName: String = ""   // selected folder name
+    val folderName: String = "",  // selected folder name
+    val source: Int = 0            // 0 = ChatGPT, 1 = DeepSeek
 )

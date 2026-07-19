@@ -27,6 +27,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var btnSelectFolder: MaterialButton
     private lateinit var tabTextMode: TextView
     private lateinit var tabFolderMode: TextView
+    private lateinit var tabChatGPT: TextView
+    private lateinit var tabDeepSeek: TextView
     private lateinit var cardTextInput: MaterialCardView
     private lateinit var cardFolderInput: MaterialCardView
     private lateinit var folderName: TextView
@@ -35,7 +37,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var sourceLabel: TextView
 
     private var selectedFolder: File? = null
-    private var currentMode: Int = 0 // 0 = text, 1 = folder
+    private var currentMode: Int = 0    // 0 = text, 1 = folder
+    private var currentSource: Int = 0  // 0 = ChatGPT, 1 = DeepSeek
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -45,6 +48,7 @@ class MainActivity : AppCompatActivity() {
 
         bindViews()
         setupTabs()
+        setupSourceTabs()
         setupListeners()
         observeState()
     }
@@ -57,6 +61,8 @@ class MainActivity : AppCompatActivity() {
         btnSelectFolder = findViewById(R.id.btnSelectFolder)
         tabTextMode = findViewById(R.id.tabTextMode)
         tabFolderMode = findViewById(R.id.tabFolderMode)
+        tabChatGPT = findViewById(R.id.tabChatGPT)
+        tabDeepSeek = findViewById(R.id.tabDeepSeek)
         cardTextInput = findViewById(R.id.cardTextInput)
         cardFolderInput = findViewById(R.id.cardFolderInput)
         folderName = findViewById(R.id.folderName)
@@ -70,56 +76,69 @@ class MainActivity : AppCompatActivity() {
         tabFolderMode.setOnClickListener { switchMode(1) }
     }
 
+    private fun setupSourceTabs() {
+        tabChatGPT.setOnClickListener { switchSource(0) }
+        tabDeepSeek.setOnClickListener { switchSource(1) }
+    }
+
+    private val activeColor by lazy { getColor(com.google.android.material.R.color.m3_sys_color_light_on_primary) }
+    private val inactiveColor by lazy { getColor(R.color.textTertiary) }
+
     private fun switchMode(mode: Int) {
         if (currentMode == mode) return
         currentMode = mode
         viewModel.setMode(mode)
 
         if (mode == 0) {
-            // Text mode active
-            tabTextMode.text = "文本模式"
-            tabTextMode.setTextColor(getColor(com.google.android.material.R.color.m3_sys_color_light_on_primary))
-            tabTextMode.background = getDrawable(R.drawable.bg_tab_active)
-            tabTextMode.textSize = 14f
-
-            tabFolderMode.text = "文件夹模式"
-            tabFolderMode.setTextColor(getColor(R.color.textTertiary))
-            tabFolderMode.background = getDrawable(R.drawable.bg_tab_inactive)
-            tabFolderMode.textSize = 14f
-
+            activateTab(tabTextMode)
+            deactivateTab(tabFolderMode)
             cardTextInput.visibility = View.VISIBLE
             cardFolderInput.visibility = View.GONE
-            sourceText.text = "手动输入"
-            sourceLabel.text = "来源: 手动输入"
         } else {
-            // Folder mode active
-            tabFolderMode.text = "文件夹模式"
-            tabFolderMode.setTextColor(getColor(com.google.android.material.R.color.m3_sys_color_light_on_primary))
-            tabFolderMode.background = getDrawable(R.drawable.bg_tab_active)
-            tabFolderMode.textSize = 14f
-
-            tabTextMode.text = "文本模式"
-            tabTextMode.setTextColor(getColor(R.color.textTertiary))
-            tabTextMode.background = getDrawable(R.drawable.bg_tab_inactive)
-            tabTextMode.textSize = 14f
-
+            activateTab(tabFolderMode)
+            deactivateTab(tabTextMode)
             cardTextInput.visibility = View.GONE
             cardFolderInput.visibility = View.VISIBLE
-            sourceText.text = "本地文件夹"
-            sourceLabel.text = "来源: 本地文件夹"
         }
+    }
+
+    private fun switchSource(source: Int) {
+        if (currentSource == source) return
+        currentSource = source
+        viewModel.setSource(source)
+
+        val sourceName = if (source == 0) "ChatGPT" else "DeepSeek"
+
+        if (source == 0) {
+            activateTab(tabChatGPT)
+            deactivateTab(tabDeepSeek)
+        } else {
+            activateTab(tabDeepSeek)
+            deactivateTab(tabChatGPT)
+        }
+
+        sourceText.text = sourceName
+        sourceLabel.text = "来源: $sourceName"
+    }
+
+    private fun activateTab(tab: TextView) {
+        tab.setTextColor(activeColor)
+        tab.background = getDrawable(R.drawable.bg_tab_active)
+    }
+
+    private fun deactivateTab(tab: TextView) {
+        tab.setTextColor(inactiveColor)
+        tab.background = getDrawable(R.drawable.bg_tab_inactive)
     }
 
     private fun setupListeners() {
         btnGenerate.setOnClickListener {
             if (currentMode == 0) {
-                // Text mode: use input text directly
                 val text = input.text.toString()
                 if (text.isNotBlank()) {
                     viewModel.generateFromText(text)
                 }
             } else {
-                // Folder mode: generate from selected folder
                 selectedFolder?.let { folder ->
                     viewModel.generateFromFolder(folder)
                 } ?: Toast.makeText(this, "请先选择文件夹", Toast.LENGTH_SHORT).show()
@@ -132,7 +151,6 @@ class MainActivity : AppCompatActivity() {
         }
 
         btnSelectFolder.setOnClickListener {
-            // Use a simple file picker via SAF
             val intent = android.content.Intent(android.content.Intent.ACTION_OPEN_DOCUMENT_TREE).apply {
                 addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
             }
@@ -144,20 +162,17 @@ class MainActivity : AppCompatActivity() {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == REQUEST_FOLDER_PICK && resultCode == RESULT_OK) {
             data?.data?.let { uri ->
-                // Take persistable permission
                 contentResolver.takePersistableUriPermission(
                     uri,
                     android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
                 )
 
-                // Try to resolve the actual file path
                 val path = getPathFromUri(uri)
                 if (path != null) {
                     val file = File(path)
                     selectedFolder = file
                     viewModel.setFolder(file)
                 } else {
-                    // Fallback: use the URI path as display name
                     val displayName = uri.lastPathSegment ?: "Unknown"
                     folderName.text = displayName
                     folderPath.text = uri.toString()
@@ -168,7 +183,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun getPathFromUri(uri: android.net.Uri): String? {
-        // Try to resolve from DocumentsProvider
         val docId = android.provider.DocumentsContract.getTreeDocumentId(uri)
         val parts = docId.split(":")
         if (parts.size >= 2) {

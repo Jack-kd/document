@@ -11,8 +11,8 @@
     <string name="btn_clear">清空</string>
     <string name="result_waiting">等待生成…</string>
     <string name="source_label">来源</string>
-    <string name="source_text_mode">手动输入</string>
-    <string name="source_folder_mode">本地文件夹</string>
+    <string name="source_chatgpt">ChatGPT</string>
+    <string name="source_deepseek">DeepSeek</string>
     <string name="label_input">输入目录结构</string>
     <string name="label_output">生成结果</string>
     <string name="label_folder">选择文件夹</string>

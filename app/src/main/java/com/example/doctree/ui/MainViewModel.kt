@@ -17,6 +17,10 @@ class MainViewModel : ViewModel() {
         _state.value = _state.value.copy(mode = mode)
     }
 
+    fun setSource(source: Int) {
+        _state.value = _state.value.copy(source = source)
+    }
+
     fun updateText(text: String) {
         _state.value = _state.value.copy(treeText = text)
     }
